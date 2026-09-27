@@ -64,7 +64,7 @@ def clave_vacante(cargo: str, empresa: str, ciudad: str = "") -> str:
     """Clave cargo+empresa normalizados para detectar la misma vacante en varias
     ciudades o portales. Si la empresa es confidencial se añade la ciudad para no
     fusionar vacantes distintas con un cargo genérico."""
-    c = normalizar(re.sub(r"\([^()]*\)\s*$", "", cargo or ""))  # "Cargo (Ciudad)" de KitEmpleo
+    c = normalizar(re.sub(r"(\s*\([^()]*\))+\s*$", "", cargo or ""))  # "Cargo (Ciudad) (Colombia)" de KitEmpleo
     c = re.sub(r"\b(en|para|de)? ?(yopal|villavicencio|casanare|meta|tolima|cesar|huila|bogota|colombia)\b", " ", c)
     c = re.sub(r"\s+", " ", c).strip()
     e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", normalizar(empresa))).strip()
@@ -121,7 +121,12 @@ def fecha_desde_texto(txt: str, hoy: datetime | None = None) -> datetime | None:
 
 # --------------------------------------------------------------------------- filtro
 
+_GRAVES = str.maketrans("àèìòùÀÈÌÒÙ", "áéíóúÁÉÍÓÚ")
+
+
 class Filtro:
+    """X y P se evalúan sobre el texto con tildes graves corregidas ("Tecnòlogo" -> "Tecnólogo")."""
+
     def __init__(self, reglas: dict):
         f = re.IGNORECASE | re.UNICODE
         self.x = re.compile(limpiar(reglas["excluir"]), f)
@@ -129,13 +134,14 @@ class Filtro:
         self.u = re.compile(limpiar(reglas.get("excluir_ubicacion") or r"(?!x)x"), f)
 
     def excluido(self, cargo: str) -> bool:
-        return bool(self.x.search(cargo or ""))
+        return bool(self.x.search((cargo or "").translate(_GRAVES)))
 
     def incluido(self, cargo: str, tarjeta: str = "") -> bool:
-        return bool(self.p.search(cargo or "") or self.p.search(tarjeta or ""))
+        return bool(self.p.search((cargo or "").translate(_GRAVES))
+                    or self.p.search((tarjeta or "").translate(_GRAVES)))
 
     def ubicacion_excluida(self, ciudad: str) -> bool:
-        return bool(self.u.search(ciudad or ""))
+        return bool(self.u.search((ciudad or "").translate(_GRAVES)))
 
     def pasa(self, cargo: str, tarjeta: str = "", ciudad: str = "", aplicar_p: bool = True) -> bool:
         if not cargo or self.excluido(cargo) or self.ubicacion_excluida(ciudad):
@@ -576,40 +582,9 @@ def parse_pandape(html_txt: str, base: str, empresa: str) -> list[dict]:
     return out
 
 
-def _pandape_mas(ctx, url: str, sopa, pagina: int) -> str | None:
-    """Replica la llamada de "Ver 20 ofertas más". El endpoint sale del JS del micrositio
-    (bundles/microsite/vacancy/index.min.js); se prueban las rutas que aparezcan allí."""
-    http = ctx["http"]
-    base = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
-    if "endpoints" not in ctx:
-        ctx["endpoints"] = []
-        js = sopa.find("script", src=re.compile(r"vacancy/index", re.I))
-        if js:
-            try:
-                codigo = http.get(urljoin(base, js["src"])).text
-                if http.snapshots:
-                    (http.snapshots / "pandape-index.min.js").write_text(codigo, encoding="utf-8")
-                ctx["endpoints"] = sorted(set(re.findall(r"[\"'](/?Vacanc[\w/]*)[\"']", codigo, re.I)))
-            except Exception as e:  # noqa: BLE001
-                _aviso(ctx, f"JS de paginación: {e}")
-    datos = {"PageNumber": pagina, "PageSize": 20, "Company.IsPreview": "False"}
-    for ep in ctx["endpoints"] + ["/Vacancies"]:
-        for metodo in ("POST", "GET"):
-            try:
-                if metodo == "POST":
-                    r = http.post(urljoin(base, ep), data=datos,
-                                  headers={"X-Requested-With": "XMLHttpRequest"}, intentos=1)
-                else:
-                    r = http.get(urljoin(base, ep), params=datos,
-                                 headers={"X-Requested-With": "XMLHttpRequest"}, intentos=1)
-            except Exception:  # noqa: BLE001
-                continue
-            if re.search(r"/Detail/\d+", r.text):
-                return r.text
-    return None
-
-
 def fuente_pandape(ctx) -> list[dict]:
+    """Primera página del listado + "Ver 20 ofertas más", que el micrositio hace con
+    $.post("/ListVacancies", {PageNumber, PageSize}) y responde JSON {view: html, isLast}."""
     cfg, http = ctx["cfg"], ctx["http"]
     items, fallos = [], 0
     for empresa, url in cfg.get("portales", {}).items():
@@ -626,24 +601,25 @@ def fuente_pandape(ctx) -> list[dict]:
         lote = parse_pandape(r.text, base, empresa)
         ids = {i["id_local"] for i in lote}
         items += lote
-        ctx.pop("endpoints", None)
-        pagina = 1
-        while sopa.find(id="btLoadMore") and pagina < 10:
-            ultimo = sopa.find(id="hdn_isLast")
-            if ultimo is not None and ultimo.get("value", "").lower() == "true":
-                break
+        ultimo = sopa.find(id="hdn_isLast")
+        es_ultima = not sopa.find(id="btLoadMore") or (ultimo is not None and ultimo.get("value") == "True")
+        pagina, sin_nuevos = 1, 0
+        while not es_ultima and pagina < 15:
             pagina += 1
-            txt = _pandape_mas(ctx, url, sopa, pagina)
-            nuevos = [i for i in parse_pandape(txt or "", base, empresa) if i["id_local"] not in ids]
-            if not nuevos:
-                if pagina == 2:
-                    _aviso(ctx, f"{empresa}: no se pudo replicar 'Ver más ofertas' (solo primeras {len(ids)})")
+            try:
+                rr = http.post(urljoin(base, "/ListVacancies"), data={"PageNumber": pagina, "PageSize": 20},
+                               headers={"X-Requested-With": "XMLHttpRequest", "Referer": url})
+                d = rr.json()
+            except Exception as e:  # noqa: BLE001
+                _aviso(ctx, f"{empresa}: 'Ver más ofertas' página {pagina}: {e}")
                 break
+            nuevos = [i for i in parse_pandape(d.get("view") or "", base, empresa) if i["id_local"] not in ids]
             ids |= {i["id_local"] for i in nuevos}
             items += nuevos
-            sopa = BeautifulSoup(txt, "html.parser")
-            if not sopa.find(id="btLoadMore"):
-                sopa = BeautifulSoup(r.text, "html.parser")  # respuesta parcial: seguir hasta que no haya nuevos
+            es_ultima = bool(d.get("isLast"))
+            sin_nuevos = 0 if nuevos else sin_nuevos + 1
+            if sin_nuevos >= 2:
+                break
     if fallos == len(cfg.get("portales", {})):
         raise RuntimeError("todos los portales fallaron")
     return items

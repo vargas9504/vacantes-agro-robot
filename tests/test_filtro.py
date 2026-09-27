@@ -20,9 +20,15 @@ FILTRO = b.Filtro(b.cargar_config()["filtro"])
     ("Auxiliar de bodega agrícola", False),
     ("Aprendiz SENA agropecuario", False),
     ("Contador público", False),
+    ("Tecnòlogo de extensiòn sanitaria de palma", False),
+    ("Convocatoria cargos de infraestructura vial", False),
 ])
 def test_filtro_cargo(cargo, esperado):
     assert FILTRO.pasa(cargo) is esperado
+
+
+def test_palmira_no_es_palma():
+    assert not FILTRO.pasa("Analista contable", tarjeta="Comfenalco, Palmira, Valle del Cauca")
 
 
 def test_p_usa_texto_de_tarjeta():
@@ -117,7 +123,7 @@ def test_parse_kitempleo_y_dedup_por_ciudad_en_parentesis():
     <h3>Administrador agropecuario ({c})</h3><div class="blog-three-attrib visible-lg-block">
     <div><i class="fa fa-calendar"></i> 24 sep</div>|<div><i class="fa fa-pencil"></i> PUNTA DE GARZAS</div>|
     <div><i class="fa fa-map-marker"></i> {c}</div></div></div></a>'''
-    html = card.format(id="92070061", c="Cumaribo") + card.format(id="92102202", c="Colombia")
+    html = card.format(id="92070061", c="Cumaribo") + card.format(id="92102202", c="Tequendama) (Colombia")
     its = b.parse_kitempleo(html, "x")
     assert [i["empresa"] for i in its] == ["PUNTA DE GARZAS"] * 2
     assert its[0]["ciudad"] == "Cumaribo" and its[0]["publicada"] == "24 sep"
