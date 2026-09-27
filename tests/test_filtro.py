@@ -98,9 +98,47 @@ def test_parse_linkedin():
 
 
 def test_parse_computrabajo():
-    html = '''<article class="box_offer"><h2><a class="js-o-link" href="/ofertas-de-trabajo/oferta-de-trabajo-de-ingeniero-agronomo-en-yopal-3F1A2B3C4D5E6F708192A3B4C5D6E7F8#lc=x">Ingeniero agrónomo</a></h2>
-    <p><a offer-grid-article-company-url>Arrocera SAS</a></p><p><span class="mr10">Yopal, Casanare</span></p>
-    <p class="fs13">Hace 3 horas</p></article>'''
+    html = '''<article class="box_offer"><h2 class="fs18"><a class="js-o-link fc_base" href="/ofertas-de-trabajo/oferta-de-trabajo-de-ingeniero-agronomo-en-yopal-3F1A2B3C4D5E6F708192A3B4C5D6E7F8#lc=x">Ingeniero agrónomo</a>
+    <div class="tags"><span class="tag postulated hide">Postulado</span><span class="tag hide">Vista</span></div></h2>
+    <p class="dFlex vm_fx fs16 fc_base mt5"><span class="fx_none mr10"><span class="fwB">4,4</span><span class="star"></span></span>
+    <a class="fc_base t_ellipsis" offer-grid-article-company-url="">Arrocera SAS</a></p>
+    <p class="fs16 fc_base mt5"><span class="mr10">Yopal, Casanare</span></p>
+    <div class="fs13 mt15"><span class="dIB mr10"><span class="icon i_salary"></span>$ 4.000.000,00 (Mensual)</span></div>
+    <p class="fs13 fc_aux mt15">Hace 3 horas</p></article>'''
     it = b.parse_computrabajo(html, "x")[0]
     assert it["id_local"] == "3f1a2b3c4d5e6f70"
-    assert it["empresa"] == "Arrocera SAS" and it["ciudad"] == "Yopal, Casanare"
+    assert it["cargo"] == "Ingeniero agrónomo"
+    assert (it["empresa"], it["ciudad"]) == ("Arrocera SAS", "Yopal, Casanare")
+    assert it["salario"] == "$ 4.000.000,00 (Mensual)" and it["publicada"] == "Hace 3 horas"
+
+
+def test_parse_kitempleo_y_dedup_por_ciudad_en_parentesis():
+    card = '''<a href="https://www.kitempleo.com.co/empleo/{id}/administrador-agropecuario"><div class="blog-three-mini">
+    <h3>Administrador agropecuario ({c})</h3><div class="blog-three-attrib visible-lg-block">
+    <div><i class="fa fa-calendar"></i> 24 sep</div>|<div><i class="fa fa-pencil"></i> PUNTA DE GARZAS</div>|
+    <div><i class="fa fa-map-marker"></i> {c}</div></div></div></a>'''
+    html = card.format(id="92070061", c="Cumaribo") + card.format(id="92102202", c="Colombia")
+    its = b.parse_kitempleo(html, "x")
+    assert [i["empresa"] for i in its] == ["PUNTA DE GARZAS"] * 2
+    assert its[0]["ciudad"] == "Cumaribo" and its[0]["publicada"] == "24 sep"
+    vs = [dict(i, id="kitempleo-" + i["id_local"]) for i in its]
+    assert len(b.deduplicar(vs)) == 1
+
+
+def test_parse_pandape():
+    html = '''<div id="VacancyList"><a class="card card-vacancy" href="/Detail/13728818"><div class="card-body">
+    <h3 class="link" title="Ingeniero agrónomo Comercial">Ingeniero agrónomo Comercial</h3><div class="vacancy-detail"><div class="d-flex">
+    <div class="align-middle mr-20"><div class="icon-container align-middle"><i class="icon icon-location-pin-1"></i></div> Valledupar</div>
+    <div class="align-middle text-medium"><div class="icon-container align-middle"><i class="icon icon-wallet"></i></div> 5.000.000 $</div>
+    </div><div class="vacancy-date">25 sept.</div></div></div></a></div>'''
+    it = b.parse_pandape(html, "https://cenipalma.pandape.computrabajo.com", "cenipalma")[0]
+    assert (it["id_local"], it["ciudad"], it["salario"], it["publicada"]) == ("13728818", "Valledupar", "5.000.000 $", "25 sept.")
+    assert it["url"] == "https://cenipalma.pandape.computrabajo.com/Detail/13728818"
+
+
+def test_parse_elempleo_json():
+    html = '''<div class="result-item"><div data-ga4-offerdata='{"id":1886771490,"title":"Representante tecnico comercial","company":"ACEPALMA","location":"Bucaramanga","salary":"$6 a $8 millones"}'>
+    <h2><a class="js-offer-title" href="/co/ofertas-trabajo/representante-tecnico-comercial-1886771490">x</a></h2>
+    <span class="js-offer-date">Hace 4 días</span></div></div>'''
+    it = b.parse_elempleo(html, "x")[0]
+    assert (it["id_local"], it["empresa"], it["ciudad"], it["salario"]) == ("1886771490", "ACEPALMA", "Bucaramanga", "$6 a $8 millones")

@@ -64,7 +64,7 @@ def clave_vacante(cargo: str, empresa: str, ciudad: str = "") -> str:
     """Clave cargo+empresa normalizados para detectar la misma vacante en varias
     ciudades o portales. Si la empresa es confidencial se añade la ciudad para no
     fusionar vacantes distintas con un cargo genérico."""
-    c = normalizar(cargo)
+    c = normalizar(re.sub(r"\([^()]*\)\s*$", "", cargo or ""))  # "Cargo (Ciudad)" de KitEmpleo
     c = re.sub(r"\b(en|para|de)? ?(yopal|villavicencio|casanare|meta|tolima|cesar|huila|bogota|colombia)\b", " ", c)
     c = re.sub(r"\s+", " ", c).strip()
     e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", normalizar(empresa))).strip()
@@ -288,7 +288,7 @@ def parse_computrabajo(html_txt: str, busqueda: str) -> list[dict]:
     sopa = BeautifulSoup(html_txt, "html.parser")
     out = []
     for art in sopa.find_all("article"):
-        a = (art.select_one("h2 a[href]") or art.select_one("a.js-o-link[href]")
+        a = (art.select_one("h2 a.js-o-link[href]") or art.select_one("h2 a[href]")
              or art.find("a", href=re.compile(r"/ofertas-de-trabajo/")))
         if not a:
             continue
@@ -296,27 +296,17 @@ def parse_computrabajo(html_txt: str, busqueda: str) -> list[dict]:
         m = re.search(r"-([0-9A-Fa-f]{16,})(?:$|[/?#])", urlparse(href).path + "/")
         if not m:
             continue
-        cargo = texto(art.find("h2")) or texto(a)
-        emp_el = (art.select_one("a[offer-grid-article-company-url]") or art.select_one("p a.fc_base")
-                  or art.select_one("[class*=company]"))
-        empresa = texto(emp_el)
-        ciudad = ""
-        for sp in art.select("p span"):
-            t = texto(sp)
-            if "," in t and not re.search(r"\$|hace|actualiz", t, re.I):
-                ciudad = t
-                break
-        if not ciudad:
-            ciudad = _ciudad_colombia(texto(art))
-        pub = ""
-        for p in art.find_all(["p", "span"]):
-            t = texto(p)
-            if re.match(r"(hace|ayer|hoy|actualizad|publicad|\d+ de )", t, re.I) and len(t) < 60:
-                pub = t
-                break
+        for basura in art.select(".tags, .opt_dots, .box_show_offer, .fx_none, .star"):
+            basura.decompose()  # "Postulado", "Vista", menú, calificación "4,4"
+        cargo = texto(a)
+        emp_el = art.select_one("a[offer-grid-article-company-url]") or art.select_one("p.dFlex")
+        ciu_el = next((p for p in art.select("p.fs16") if "dFlex" not in (p.get("class") or [])), None)
+        sal_el = art.select_one(".i_salary")
+        pub_el = art.select_one("p.fc_aux")
         full = texto(art)
-        out.append(_item(m[1][:16].lower(), cargo, href, busqueda, empresa, ciudad, pub,
-                         _salario(full), full))
+        out.append(_item(m[1][:16].lower(), cargo, href, busqueda, texto(emp_el),
+                         texto(ciu_el.select_one("span") or ciu_el) if ciu_el else _ciudad_colombia(full),
+                         texto(pub_el), texto(sal_el.parent) if sal_el else "", full))
     return out
 
 
@@ -351,25 +341,24 @@ def parse_elempleo(html_txt: str, busqueda: str) -> list[dict]:
     sopa = BeautifulSoup(html_txt, "html.parser")
     out, vistos = [], set()
     patron = re.compile(r"/co/ofertas-trabajo/([^/?#]+?)-(\d{5,})")
-    for a in sopa.find_all("a", href=patron):
-        m = patron.search(a["href"])
-        oid = m[2]
+    for card in sopa.select(".result-item"):
+        a = card.find("a", href=patron)
+        if not a:
+            continue
+        oid = patron.search(a["href"])[2]
         if oid in vistos:
             continue
         vistos.add(oid)
-        card = _contenedor(a, lambda el: {patron.search(x["href"])[2] for x in el.find_all("a", href=patron)})
-        cargo = limpiar(a.get("title")) or texto(a)
-        if len(cargo) < 3:
-            h = card.find(["h2", "h3"])
-            cargo = texto(h) if h else m[1].replace("-", " ")
-        emp = card.select_one("[class*=company], [class*=empresa]")
-        ciu = card.select_one("[class*=city], [class*=ciudad], [class*=location]")
-        pub = card.select_one("[class*=publish], [class*=date], [class*=fecha]")
-        sal = card.select_one("[class*=salary], [class*=salario]")
-        full = texto(card)
-        out.append(_item(oid, cargo, urljoin("https://www.elempleo.com", a["href"].split("?")[0]),
-                         busqueda, texto(emp), texto(ciu) or _ciudad_colombia(full), texto(pub),
-                         texto(sal) or _salario(full), full))
+        try:
+            d = json.loads(card.select_one("[data-ga4-offerdata]")["data-ga4-offerdata"])
+        except (TypeError, ValueError, KeyError):
+            d = {}
+        pub = texto(card.select_one(".js-offer-date, .info-publish-date"))
+        out.append(_item(oid, d.get("title") or limpiar(a.get("title")) or texto(a),
+                         urljoin("https://www.elempleo.com", a["href"].split("?")[0]), busqueda,
+                         d.get("company") or texto(card.select_one(".js-offer-company")),
+                         d.get("location") or texto(card.select_one(".js-offer-city")), pub,
+                         d.get("salary", ""), f"{texto(card)} {d.get('equivalentPositions', '')} {d.get('tags', '')}"))
     return out
 
 
@@ -386,17 +375,21 @@ def _contenedor(a, ids_en, max_sube: int = 8):
 
 def detalle_elempleo(ctx, item: dict) -> bool:
     """Abre el detalle: fecha de publicación, salario, ciudad. False = descartar (vieja)."""
+    f = fecha_desde_texto(item["publicada"]) if item["publicada"] else None
+    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 15) + 7:
+        return False  # el listado ya dice "hace 1 mes": no vale la pena abrir el detalle
     r = ctx["http"].get(item["url"])
     sopa = BeautifulSoup(r.text, "html.parser")
     full = texto(sopa.body or sopa)
     m = re.search(r"Publicad[oa]\s*(?:el|:)?\s*(\d{1,2}\s+[A-Za-zé]{3,}\.?\s+\d{4}|hace [^.|]{1,20}|hoy|ayer)", full, re.I)
     if m:
         item["publicada"] = limpiar(m[1])
-    for sel, campo in (("[class*=salary], .js-joboffer-salary", "salario"),
-                       ("[class*=city], .js-joboffer-city", "ciudad"),
-                       ("[class*=company-name], .js-joboffer-company", "empresa")):
+    for oculto in sopa.select(".hide, .hidden, script, style"):
+        oculto.decompose()
+    for sel, campo in ((".js-joboffer-salary, [class*=salary]", "salario"),
+                       (".js-joboffer-city, [class*=city]", "ciudad")):
         el = sopa.select_one(sel)
-        if el and texto(el) and (not item[campo] or campo != "empresa"):
+        if el and texto(el) and (not item[campo] or re.search(r"confidencial", item[campo], re.I)):
             item[campo] = texto(el)[:120]
     if not item["salario"]:
         item["salario"] = _salario(full)
@@ -477,7 +470,7 @@ def fuente_linkedin(ctx) -> list[dict]:
 
 def parse_kitempleo(html_txt: str, busqueda: str) -> list[dict]:
     sopa = BeautifulSoup(html_txt, "html.parser")
-    patron = re.compile(r"/empleo/(\w{6,10})/([^/]+)/?")
+    patron = re.compile(r"/empleo/(\w{6,10})/([^/?#]+)")
     out, vistos = [], set()
     for a in sopa.find_all("a", href=patron):
         m = patron.search(a["href"])
@@ -485,23 +478,17 @@ def parse_kitempleo(html_txt: str, busqueda: str) -> list[dict]:
         if oid in vistos:
             continue
         vistos.add(oid)
-        card = _contenedor(a, lambda el: {patron.search(x["href"])[1] for x in el.find_all("a", href=patron)})
-        cargo = limpiar(a.get("title")) or texto(a)
-        h = card.find(["h2", "h3"])
-        if h and len(texto(h)) > 3:
-            cargo = texto(h)
-        if len(cargo) < 3:
-            cargo = m[2].replace("-", " ")
-        full = texto(card)
-        emp = card.select_one("[class*=company], [class*=empresa]")
-        ciu = card.select_one("[class*=location], [class*=city], [class*=ciudad]")
-        fec = card.select_one("time, [class*=date], [class*=fecha]")
-        pub = (fec.get("datetime") or texto(fec)) if fec else ""
-        if not pub:
-            mf = re.search(r"\b(\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2}|hace [^.|]{1,20}|\d{1,2} de [a-z]+ de \d{4})", full, re.I)
-            pub = mf[1] if mf else ""
+
+        def icono(nombre):
+            i = a.select_one(f".blog-three-attrib i.{nombre}")
+            return texto(i.parent) if i else ""
+
+        h = a.find(["h3", "h4"])
+        cargo = texto(h) if h else (texto(a) or m[2].replace("-", " "))
+        full = texto(a)
         out.append(_item(oid, cargo, urljoin("https://www.kitempleo.com.co", a["href"]), busqueda,
-                         texto(emp), texto(ciu) or _ciudad_colombia(full), pub, _salario(full), full))
+                         icono("fa-pencil"), icono("fa-map-marker"), icono("fa-calendar"),
+                         _salario(full), full))
     return out
 
 
@@ -563,7 +550,7 @@ def fuente_indeed(ctx) -> list[dict]:
 
 # ---- F. Pandapé
 
-def parse_pandape(html_txt: str, base: str, busqueda: str) -> list[dict]:
+def parse_pandape(html_txt: str, base: str, empresa: str) -> list[dict]:
     sopa = BeautifulSoup(html_txt, "html.parser")
     patron = re.compile(r"/Detail/(\d+)", re.I)
     out, vistos = [], set()
@@ -572,23 +559,54 @@ def parse_pandape(html_txt: str, base: str, busqueda: str) -> list[dict]:
         if oid in vistos:
             continue
         vistos.add(oid)
-        card = _contenedor(a, lambda el: {patron.search(x["href"])[1] for x in el.find_all("a", href=patron)})
+        card = a if a.find(["h2", "h3", "h4"]) else a.find_parent(class_=re.compile("card")) or a
+
+        def icono(nombre):
+            i = card.select_one(f"i.{nombre}")
+            if not i:
+                return ""
+            cont = i.find_parent(class_="icon-container")
+            return texto(cont.parent if cont else i.parent)
+
         h = card.find(["h2", "h3", "h4"])
-        cargo = texto(h) if h else (limpiar(a.get("title")) or texto(a))
-        full = texto(card)
-        ciudad = _ciudad_colombia(full)
-        for el in card.find_all(["span", "p", "li", "div"]):
-            t = texto(el)
-            if 2 < len(t) < 60 and "," in t and not re.search(r"\$|hace|public", t, re.I) and t != cargo:
-                ciudad = t
-                break
-        pub = ""
-        mf = re.search(r"(hace [^,.|]{1,20}|publicad[oa][^,|]{0,25}|\d{1,2}/\d{1,2}/\d{4}|\d{1,2} de [a-z]+(?: de \d{4})?)", full, re.I)
-        if mf:
-            pub = mf[1]
-        out.append(_item(oid, cargo, urljoin(base, a["href"]), busqueda, busqueda.capitalize(), ciudad, pub,
-                         _salario(full), full))
+        cargo = limpiar(h.get("title")) or texto(h) if h else (limpiar(a.get("title")) or texto(a))
+        out.append(_item(oid, cargo, urljoin(base, a["href"]), empresa, empresa.capitalize(),
+                         icono("icon-location-pin-1"), texto(card.select_one(".vacancy-date")),
+                         icono("icon-wallet"), texto(card)))
     return out
+
+
+def _pandape_mas(ctx, url: str, sopa, pagina: int) -> str | None:
+    """Replica la llamada de "Ver 20 ofertas más". El endpoint sale del JS del micrositio
+    (bundles/microsite/vacancy/index.min.js); se prueban las rutas que aparezcan allí."""
+    http = ctx["http"]
+    base = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+    if "endpoints" not in ctx:
+        ctx["endpoints"] = []
+        js = sopa.find("script", src=re.compile(r"vacancy/index", re.I))
+        if js:
+            try:
+                codigo = http.get(urljoin(base, js["src"])).text
+                if http.snapshots:
+                    (http.snapshots / "pandape-index.min.js").write_text(codigo, encoding="utf-8")
+                ctx["endpoints"] = sorted(set(re.findall(r"[\"'](/?Vacanc[\w/]*)[\"']", codigo, re.I)))
+            except Exception as e:  # noqa: BLE001
+                _aviso(ctx, f"JS de paginación: {e}")
+    datos = {"PageNumber": pagina, "PageSize": 20, "Company.IsPreview": "False"}
+    for ep in ctx["endpoints"] + ["/Vacancies"]:
+        for metodo in ("POST", "GET"):
+            try:
+                if metodo == "POST":
+                    r = http.post(urljoin(base, ep), data=datos,
+                                  headers={"X-Requested-With": "XMLHttpRequest"}, intentos=1)
+                else:
+                    r = http.get(urljoin(base, ep), params=datos,
+                                 headers={"X-Requested-With": "XMLHttpRequest"}, intentos=1)
+            except Exception:  # noqa: BLE001
+                continue
+            if re.search(r"/Detail/\d+", r.text):
+                return r.text
+    return None
 
 
 def fuente_pandape(ctx) -> list[dict]:
@@ -604,22 +622,28 @@ def fuente_pandape(ctx) -> list[dict]:
             _aviso(ctx, f"{empresa}: {e}")
             continue
         base = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+        sopa = BeautifulSoup(r.text, "html.parser")
         lote = parse_pandape(r.text, base, empresa)
-        items += lote
-        # Paginación "Ver N ofertas más": el listado admite ?page=N; seguimos mientras salgan ids nuevos.
         ids = {i["id_local"] for i in lote}
-        for pag in range(2, 11):
-            if len(lote) < 10:
+        items += lote
+        ctx.pop("endpoints", None)
+        pagina = 1
+        while sopa.find(id="btLoadMore") and pagina < 10:
+            ultimo = sopa.find(id="hdn_isLast")
+            if ultimo is not None and ultimo.get("value", "").lower() == "true":
                 break
-            try:
-                r = http.get(f"{url}?page={pag}")
-            except Exception:
+            pagina += 1
+            txt = _pandape_mas(ctx, url, sopa, pagina)
+            nuevos = [i for i in parse_pandape(txt or "", base, empresa) if i["id_local"] not in ids]
+            if not nuevos:
+                if pagina == 2:
+                    _aviso(ctx, f"{empresa}: no se pudo replicar 'Ver más ofertas' (solo primeras {len(ids)})")
                 break
-            lote = [i for i in parse_pandape(r.text, base, empresa) if i["id_local"] not in ids]
-            if not lote:
-                break
-            ids |= {i["id_local"] for i in lote}
-            items += lote
+            ids |= {i["id_local"] for i in nuevos}
+            items += nuevos
+            sopa = BeautifulSoup(txt, "html.parser")
+            if not sopa.find(id="btLoadMore"):
+                sopa = BeautifulSoup(r.text, "html.parser")  # respuesta parcial: seguir hasta que no haya nuevos
     if fallos == len(cfg.get("portales", {})):
         raise RuntimeError("todos los portales fallaron")
     return items

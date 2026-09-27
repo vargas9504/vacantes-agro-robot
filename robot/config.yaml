@@ -7,7 +7,7 @@ filtro:
     aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[oó]log|t[eé]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|flor|rosa|clavel|crisantemo|pomp[oó]n|mipe|junior|egresad|sin experiencia|la palma\b|seguridad|siso|\bsst\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina
   # P: se incluye solo si el CARGO o el TEXTO DE LA TARJETA coincide.
   incluir: >-
-    agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda
+    agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda
   # Se descarta si la CIUDAD / ubicación coincide (KitEmpleo mezcla avisos de otros países).
   excluir_ubicacion: >-
     argentina|buenos aires|c[oó]rdoba, arg|mendoza|santa fe, arg|per[uú]\b|lima, per|chile|m[eé]xico|ecuador|espa[nñ]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[aá]|costa rica|estados unidos|united states
