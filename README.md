@@ -37,6 +37,18 @@ Campos de cada candidata: `id` (`<portal>-<id>`), `portal`, `cargo`, `empresa`, 
 > trae `"corrida_inicial": true`: esa corrida no se debe leer como "hay 100 vacantes nuevas".
 > Igual pasa con una fuente que funciona por primera vez: aparece en `fuentes_iniciales`.
 
+## Estado de las fuentes (probado desde GitHub Actions, sept. 2026)
+
+| Fuente | Funciona | Notas |
+|---|---|---|
+| Computrabajo | ✅ | ~40 búsquedas, ~500 listados, 1 min |
+| elempleo | ✅ | Datos del listado (JSON `data-ga4-offerdata`) + detalle de las candidatas nuevas (fecha, salario); descarta > 15 días |
+| LinkedIn | ✅ | API de invitados, ~180 llamadas, ~4,5 min |
+| KitEmpleo | ✅ | Muchos repetidos: se deduplica por cargo+empresa (quitando "(Ciudad)") |
+| Pandapé (Cenipalma, Poligrow) | ✅ | Incluye "Ver 20 ofertas más" (`POST /ListVacancies`) |
+| Indeed | ❌ bloqueado | Responde 403 "Security Check" a las IPs de GitHub; queda como `bloqueado` |
+| Jooble | ❌ bloqueado | Cloudflare "Just a moment..." (403); queda como `bloqueado` |
+
 ## Para el agente de IA
 
 1. Leer `data/estado.json`. Si `corrida_inicial` es `true`, ignorar `nuevas.json` de ese día

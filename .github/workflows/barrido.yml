@@ -13,9 +13,6 @@ on:
         description: "Guardar HTML crudo de cada fuente en debug/"
         type: boolean
         default: false
-  push:
-    branches: ["claude/**"]
-    paths: ["robot/**", ".github/workflows/barrido.yml"]
 
 permissions:
   contents: write
@@ -41,7 +38,7 @@ jobs:
         run: python -m pytest -q tests
       - name: Barrido
         env:
-          SNAPSHOT_DIR: ${{ (inputs.depurar || github.event_name == 'push') && 'debug' || '' }}
+          SNAPSHOT_DIR: ${{ inputs.depurar && 'debug' || '' }}
         run: python robot/barrido.py ${{ inputs.solo && format('--solo {0}', inputs.solo) || '' }}
       - name: Resumen
         if: always()
