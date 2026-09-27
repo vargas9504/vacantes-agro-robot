@@ -1,0 +1,94 @@
+{
+  "ultima_corrida": "2026-09-27 12:19",
+  "ultima_corrida_iso": "2026-09-27T12:19:29-05:00",
+  "corrida_inicial": false,
+  "fuentes_iniciales": [],
+  "total_nuevas": 1,
+  "duracion_s": 274.6,
+  "fuentes": {
+    "pandape": {
+      "estado": "ok",
+      "listados": 33,
+      "unicos": 33,
+      "candidatas": 21,
+      "nuevas": 0,
+      "duracion_s": 1.6,
+      "peticiones": 3,
+      "error": "",
+      "avisos": [],
+      "inicial": false
+    },
+    "computrabajo": {
+      "estado": "ok",
+      "listados": 523,
+      "unicos": 317,
+      "candidatas": 46,
+      "nuevas": 0,
+      "duracion_s": 58.6,
+      "peticiones": 54,
+      "error": "",
+      "avisos": [],
+      "inicial": false
+    },
+    "elempleo": {
+      "estado": "ok",
+      "listados": 243,
+      "unicos": 192,
+      "candidatas": 69,
+      "nuevas": 1,
+      "duracion_s": 13.9,
+      "peticiones": 14,
+      "error": "",
+      "avisos": [],
+      "inicial": false
+    },
+    "linkedin": {
+      "estado": "ok",
+      "listados": 1726,
+      "unicos": 992,
+      "candidatas": 12,
+      "nuevas": 0,
+      "duracion_s": 273.3,
+      "peticiones": 183,
+      "error": "",
+      "avisos": [],
+      "inicial": false
+    },
+    "indeed": {
+      "estado": "bloqueado",
+      "listados": 0,
+      "unicos": 0,
+      "candidatas": 0,
+      "nuevas": 0,
+      "duracion_s": 0.1,
+      "peticiones": 1,
+      "error": "HTTP 403 / captcha en co.indeed.com",
+      "avisos": [],
+      "inicial": false
+    },
+    "jooble": {
+      "estado": "bloqueado",
+      "listados": 0,
+      "unicos": 0,
+      "candidatas": 0,
+      "nuevas": 0,
+      "duracion_s": 0.2,
+      "peticiones": 1,
+      "error": "HTTP 403 / captcha en co.jooble.org",
+      "avisos": [],
+      "inicial": false
+    },
+    "kitempleo": {
+      "estado": "ok",
+      "listados": 147,
+      "unicos": 147,
+      "candidatas": 78,
+      "nuevas": 0,
+      "duracion_s": 15.8,
+      "peticiones": 15,
+      "error": "",
+      "avisos": [],
+      "inicial": false
+    }
+  }
+}
