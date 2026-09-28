@@ -10,7 +10,7 @@ de la búsqueda de empleo: baja los listados de los portales, filtra por cargo, 
 
 ## Qué hace
 
-Cada día a las **5:30 a. m. (hora Colombia)** el workflow `barrido`:
+Cada día a las **5:17 a. m. (hora Colombia)** el workflow `barrido`:
 
 1. Lee Computrabajo, elempleo, LinkedIn (API pública de invitados), KitEmpleo, Indeed, Pandapé
    (Cenipalma, Poligrow) y Jooble. Cada fuente va por separado: si una falla, se anota y siguen las demás.
@@ -55,6 +55,22 @@ Campos de cada candidata: `id` (`<portal>-<id>`), `portal`, `cargo`, `empresa`, 
    (o tratarlo como línea base). Si una fuente aparece en `fuentes_iniciales`, sus nuevas son la línea base.
 2. Leer `data/nuevas.json` (lista, normalmente pocas) y revisar solo esas.
 3. Las fuentes con `estado` distinto de `ok` hay que barrerlas a mano ese día.
+
+## Horario y respaldos
+
+GitHub no garantiza la hora exacta de las tareas programadas: en las horas en punto y a las y media hay
+tanta congestión que a veces se retrasan o no se disparan (y en un repositorio recién creado la primera
+puede no ocurrir). Por eso el cron usa minutos poco comunes y tiene dos respaldos:
+
+| Hora Colombia | Cron (UTC) | Papel |
+|---|---|---|
+| 5:17 a. m. | `17 10 * * *` | principal |
+| 6:43 a. m. | `43 11 * * *` | respaldo |
+| 8:07 a. m. | `7 13 * * *` | último respaldo |
+
+Un respaldo solo corre si `data/estado.json` no tiene ya una corrida de hoy; si la hay, termina en
+segundos sin tocar nada (así no reemplaza `nuevas.json` por una lista vacía). "Run workflow" a mano
+siempre corre. Para el agente: comparar la fecha de `ultima_corrida` con la de hoy antes de confiar en `nuevas.json`.
 
 ## Correrlo a mano
 

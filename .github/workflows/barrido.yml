@@ -1,8 +1,13 @@
 name: barrido
 
 on:
+  # GitHub no garantiza los cron: en las horas en punto / y media se retrasan o se pierden.
+  # Por eso minutos "raros" y dos respaldos; el job `revisar` hace que los respaldos
+  # no hagan nada si ya hubo corrida hoy (así no se vacía nuevas.json).
   schedule:
-    - cron: "30 10 * * *"   # 5:30 a. m. hora Colombia
+    - cron: "17 10 * * *"   # 5:17 a. m. hora Colombia (principal)
+    - cron: "43 11 * * *"   # 6:43 a. m. (respaldo)
+    - cron: "7 13 * * *"    # 8:07 a. m. (último respaldo, antes de que lo lea el agente)
   workflow_dispatch:
     inputs:
       solo:
@@ -24,7 +29,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    outputs:
+      correr: ${{ steps.hoy.outputs.correr }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: data
+      - id: hoy
+        run: |
+          hoy=$(TZ=America/Bogota date +%Y-%m-%d)
+          ultima=$(python3 -c "import json;print(json.load(open('data/estado.json')).get('ultima_corrida',''))" 2>/dev/null || true)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${ultima:0:10}" = "$hoy" ]; then
+            echo "Ya hubo corrida hoy ($ultima): este respaldo no hace nada."
+            echo "correr=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Última corrida: ${ultima:-ninguna}. Corro."
+            echo "correr=true" >> "$GITHUB_OUTPUT"
+          fi
+
   barrido:
+    needs: revisar
+    if: needs.revisar.outputs.correr == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
