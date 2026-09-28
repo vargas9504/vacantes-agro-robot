@@ -1,14 +1,50 @@
 [
   {
-    "id": "elempleo-1886771122",
-    "portal": "elempleo",
-    "cargo": "Ejecutivo comercial (ferretería y agropecuario) - bogotá",
-    "empresa": "SERO SAS",
-    "ciudad": "Bogotá",
-    "publicada": "23 Sep 2026",
-    "salario": "$3,5 a $4 millones",
-    "url": "https://www.elempleo.com/co/ofertas-trabajo/ejecutivo-comercial-ferreteria-y-agropecuario-bogota-1886771122",
-    "fuente_busqueda": "trabajo-administrador-agropecuario",
-    "encontrada": "2026-09-27 13:04"
+    "id": "computrabajo-540e8b67f07c4031",
+    "portal": "computrabajo",
+    "cargo": "Representante Técnico Comercial Agrónomo San Alberto",
+    "empresa": "DUCOL GROUP SAS",
+    "ciudad": "Bucaramanga, Santander",
+    "publicada": "Hace 2 horas",
+    "salario": "",
+    "url": "https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-representante-tecnico-comercial-agronomo-san-alberto-en-bucaramanga-540E8B67F07C403161373E686DCF3405",
+    "fuente_busqueda": "trabajo-de-agronomo?pubdate=7 | trabajo-de-agronomo",
+    "encontrada": "2026-09-28 11:21"
+  },
+  {
+    "id": "computrabajo-536ae06abfdd47cd",
+    "portal": "computrabajo",
+    "cargo": "Administrador de Finca",
+    "empresa": "CENTRO DE EMPLEO Y TALENTO COLSUBSIDIO",
+    "ciudad": "Bogotá, D.C., Bogotá, D.C.",
+    "publicada": "Hace 13 minutos",
+    "salario": "",
+    "url": "https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-administrador-de-finca-en-bogota-dc-536AE06ABFDD47CD61373E686DCF3405",
+    "fuente_busqueda": "trabajo-de-administrador-de-finca?pubdate=7",
+    "encontrada": "2026-09-28 11:21"
+  },
+  {
+    "id": "computrabajo-0768a3532575602e",
+    "portal": "computrabajo",
+    "cargo": "Asesora Inmobiliaria oficina y Captador Inmobiliario",
+    "empresa": "LA PALMA INMOBILIARIA S.A.S",
+    "ciudad": "Medellín, Antioquia",
+    "publicada": "Hace 3 horas",
+    "salario": "$ 1.750.905,00 (Mensual)",
+    "url": "https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-asesora-inmobiliaria-oficina-y-captador-inmobiliario-en-medellin-0768A3532575602E61373E686DCF3405",
+    "fuente_busqueda": "trabajo-de-palma?pubdate=7",
+    "encontrada": "2026-09-28 11:21"
+  },
+  {
+    "id": "kitempleo-91333047",
+    "portal": "kitempleo",
+    "cargo": "Analista de Comunicaciones y Contenido Digital (Paratebueno)",
+    "empresa": "CENIPALMA",
+    "ciudad": "Paratebueno",
+    "publicada": "16 sep",
+    "salario": "",
+    "url": "https://www.kitempleo.com.co/empleo/91333047/analista-de-comunicaciones-y-contenido-digital-paratebueno",
+    "fuente_busqueda": "Cenipalma",
+    "encontrada": "2026-09-28 11:21"
   }
 ]
