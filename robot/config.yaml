@@ -4,10 +4,10 @@
 filtro:
   # X: si el CARGO coincide, se descarta.
   excluir: >-
-    aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[oó]log|t[eé]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|flor|rosa|clavel|crisantemo|pomp[oó]n|mipe|junior|egresad|sin experiencia|la palma\b|seguridad|siso|\bsst\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina
+    aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[oó]log|t[eé]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|\bflor(es|icultura|icultor)?\b|\brosas?\b|\bclavel|crisantemo|pomp[oó]n|mipe|junior|egresad|sin experiencia|la palma\b|seguridad|siso|\bsst\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina
   # P: se incluye solo si el CARGO o el TEXTO DE LA TARJETA coincide.
   incluir: >-
-    agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda
+    agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda|agricultur|\bdron|ensayos? (de campo|agr)|\btrials?\b|investigaci[oó]n agr|ganader
   # Se descarta si la CIUDAD / ubicación coincide (KitEmpleo mezcla avisos de otros países).
   excluir_ubicacion: >-
     argentina|buenos aires|c[oó]rdoba, arg|mendoza|santa fe, arg|per[uú]\b|lima, per|chile|m[eé]xico|ecuador|espa[nñ]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[aá]|costa rica|estados unidos|united states
@@ -35,7 +35,7 @@ fuentes:
 
   elempleo:
     activa: true
-    slugs: [ingeniero-agronomo, agronomo, administrador-agropecuario, administrador-de-finca, jefe-de-finca, director-administrativo, palma, arroz, asesor-tecnico-comercial, agricola, casanare, yopal, villavicencio]
+    slugs: [ingeniero-agronomo, agronomo, administrador-agropecuario, administrador-de-finca, jefe-de-finca, director-administrativo, palma, arroz, asesor-tecnico-comercial, agricola, casanare, yopal, villavicencio, agroindustria, cultivos, agricultura, dron, jefe-agricola, coordinador-agricola]
     max_dias: 15
 
   linkedin:
@@ -49,7 +49,7 @@ fuentes:
   kitempleo:
     activa: true
     max_dias: 30
-    terminos: [ingeniero agronomo, agronomo, administrador agropecuario, administrador de finca, director agricola, asesor tecnico comercial agricola, representante tecnico comercial, palma, arroz, agroinsumos, Casanare, Yopal, Villavicencio, Cenipalma, Agrosavia]
+    terminos: [ingeniero agronomo, agronomo, administrador agropecuario, administrador de finca, director agricola, asesor tecnico comercial agricola, representante tecnico comercial, palma, arroz, agroinsumos, Casanare, Yopal, Villavicencio, Cenipalma, Agrosavia, agricultura, agroindustria, cultivos, semillas, fertilizantes, extensionista]
 
   indeed:
     activa: true

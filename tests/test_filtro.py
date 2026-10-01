@@ -21,6 +21,17 @@ FILTRO = b.Filtro(b.cargar_config()["filtro"])
     ("Aprendiz SENA agropecuario", False),
     ("Contador público", False),
     ("Tecnòlogo de extensiòn sanitaria de palma", False),
+    ("Piloto de dron para aplicaciones", True),
+    ("Coordinador de trials de herbicidas", True),
+    ("Ingeniero industrial", False),
+    ("Jefe de ganadería", True),
+    ("Gerente de agricultura de precisión", True),
+    ("Coordinador de ensayos de campo", True),
+    ("Analista de investigación de mercados", False),
+    ("Ingeniero agrónomo Florencia", True),
+    ("Supervisor de cultivo de flores", False),
+    ("Jefe de floricultura", False),
+    ("Asistente de rosas exportación", False),
     ("Convocatoria cargos de infraestructura vial", False),
 ])
 def test_filtro_cargo(cargo, esperado):
@@ -60,6 +71,14 @@ def test_deduplicar_por_id_y_cargo_empresa():
     ]
     out = b.deduplicar(items)
     assert [v["id"] for v in out] == ["computrabajo-1", "elempleo-6"]
+
+
+def test_dedup_titulo_que_extiende_a_otro():
+    items = [_v("kitempleo-1", "Analista de Inteligencia de Negocios Agropecuario (Bogotá)", "Adecco Colombia S A"),
+             _v("kitempleo-2", "Analista de Inteligencia de Negocios Agropecuario Analista Estratégico (Bogotá)",
+                "Adecco Colombia S A"),
+             _v("kitempleo-3", "Analista de Inteligencia de Negocios Agropecuario", "Otra empresa")]
+    assert [v["id"] for v in b.deduplicar(items)] == ["kitempleo-1", "kitempleo-3"]
 
 
 def test_confidencial_no_fusiona_ciudades():

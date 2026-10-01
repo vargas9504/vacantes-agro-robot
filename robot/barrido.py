@@ -691,12 +691,27 @@ def purgar_vistos(vistos: dict, dias: int, hoy: str) -> dict:
     return {portal: {k: f for k, f in ids.items() if f >= limite} for portal, ids in vistos.items()}
 
 
+def clave_repetida(k: str, claves) -> bool:
+    """Misma vacante: clave igual, o misma empresa y un cargo es el comienzo del otro
+    ("Analista X (Bogotá)" vs "Analista X Analista Estratégico... (Bogotá)")."""
+    if k in claves:
+        return True
+    cargo, _, empresa = k.partition("|")
+    if empresa.startswith("?") or len(cargo) < 15:
+        return False
+    for otra in claves:
+        c2, _, e2 = otra.partition("|")
+        if e2 == empresa and len(c2) >= 15 and (c2.startswith(cargo) or cargo.startswith(c2)):
+            return True
+    return False
+
+
 def deduplicar(items: list[dict]) -> list[dict]:
     """Quita repetidos dentro de una misma corrida por id y por cargo+empresa."""
     out, ids, claves = [], set(), set()
     for it in items:
         k = clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""))
-        if it["id"] in ids or k in claves:
+        if it["id"] in ids or clave_repetida(k, claves):
             continue
         ids.add(it["id"])
         claves.add(k)
@@ -798,7 +813,7 @@ def main(argv=None) -> int:
         n_nuevas = 0
         for it in cand:
             k = clave_vacante(it["cargo"], it["empresa"], it["ciudad"])
-            if k in claves:  # misma vacante ya vista en otra ciudad/portal
+            if clave_repetida(k, claves):  # misma vacante ya vista en otra ciudad/portal
                 continue
             if spec.get("detalle"):
                 try:
