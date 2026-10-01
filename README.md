@@ -68,7 +68,14 @@ puede no ocurrir). Por eso el cron usa minutos poco comunes y tiene dos respaldo
 | 6:43 a. m. | `43 11 * * *` | respaldo |
 | 8:07 a. m. | `7 13 * * *` | último respaldo |
 
-Un respaldo solo corre si `data/estado.json` no tiene ya una corrida de hoy; si la hay, termina en
+**Despertador externo.** GitHub no llegó a disparar estos cron en este repositorio, así que el disparo
+diario real lo hace [cron-job.org](https://cron-job.org) a las 5:05 a. m.: un `POST` a
+`https://api.github.com/repos/vargas9504/vacantes-agro-robot/actions/workflows/barrido.yml/dispatches`
+con el cuerpo `{"ref":"main","inputs":{"automatico":"true"}}` y un token de GitHub (fine-grained, solo este
+repositorio, permiso *Actions: Read and write*). Con `automatico=true` se comporta como un respaldo programado.
+El token vence: renuévalo en GitHub y pégalo de nuevo en cron-job.org antes de esa fecha.
+
+Un respaldo (o una llamada automática) solo corre si `data/estado.json` no tiene ya una corrida de hoy; si la hay, termina en
 segundos sin tocar nada (así no reemplaza `nuevas.json` por una lista vacía). "Run workflow" a mano
 siempre corre. Para el agente: comparar la fecha de `ultima_corrida` con la de hoy antes de confiar en `nuevas.json`.
 

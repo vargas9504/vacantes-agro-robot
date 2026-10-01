@@ -18,6 +18,10 @@ on:
         description: "Guardar HTML crudo de cada fuente en debug/"
         type: boolean
         default: false
+      automatico:
+        description: "Llamada automática (cron-job.org): no corre si ya hubo corrida hoy"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -41,8 +45,10 @@ jobs:
         run: |
           hoy=$(TZ=America/Bogota date +%Y-%m-%d)
           ultima=$(python3 -c "import json;print(json.load(open('data/estado.json')).get('ultima_corrida',''))" 2>/dev/null || true)
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "${ultima:0:10}" = "$hoy" ]; then
-            echo "Ya hubo corrida hoy ($ultima): este respaldo no hace nada."
+          automatica=false
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.automatico }}" = "true" ]; then automatica=true; fi
+          if [ "$automatica" = "true" ] && [ "${ultima:0:10}" = "$hoy" ]; then
+            echo "Ya hubo corrida hoy ($ultima): esta llamada automática no hace nada."
             echo "correr=false" >> "$GITHUB_OUTPUT"
           else
             echo "Última corrida: ${ultima:-ninguna}. Corro."
