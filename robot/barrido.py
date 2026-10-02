@@ -133,15 +133,20 @@ class Filtro:
         self.p = re.compile(limpiar(reglas["incluir"]), f)
         self.u = re.compile(limpiar(reglas.get("excluir_ubicacion") or r"(?!x)x"), f)
 
+    @staticmethod
+    def _busca(rx, txt: str) -> bool:
+        """Con y sin tildes: "Prácticante" también cae en `practicant`."""
+        t = (txt or "").translate(_GRAVES)
+        return bool(rx.search(t) or rx.search(sin_tildes(t)))
+
     def excluido(self, cargo: str) -> bool:
-        return bool(self.x.search((cargo or "").translate(_GRAVES)))
+        return self._busca(self.x, cargo)
 
     def incluido(self, cargo: str, tarjeta: str = "") -> bool:
-        return bool(self.p.search((cargo or "").translate(_GRAVES))
-                    or self.p.search((tarjeta or "").translate(_GRAVES)))
+        return self._busca(self.p, cargo) or self._busca(self.p, tarjeta)
 
     def ubicacion_excluida(self, ciudad: str) -> bool:
-        return bool(self.u.search((ciudad or "").translate(_GRAVES)))
+        return self._busca(self.u, ciudad)
 
     def pasa(self, cargo: str, tarjeta: str = "", ciudad: str = "", aplicar_p: bool = True) -> bool:
         if not cargo or self.excluido(cargo) or self.ubicacion_excluida(ciudad):
@@ -691,13 +696,27 @@ def purgar_vistos(vistos: dict, dias: int, hoy: str) -> dict:
     return {portal: {k: f for k, f in ids.items() if f >= limite} for portal, ids in vistos.items()}
 
 
+_CIUDAD_GENERICA = {"", "colombia", "remoto", "nacional"}
+
+
 def clave_repetida(k: str, claves) -> bool:
-    """Misma vacante: clave igual, o misma empresa y un cargo es el comienzo del otro
-    ("Analista X (Bogotá)" vs "Analista X Analista Estratégico... (Bogotá)")."""
+    """Misma vacante: clave igual; o misma empresa y un cargo es el comienzo del otro
+    ("Analista X (Bogotá)" vs "Analista X Analista Estratégico... (Bogotá)"); o, con
+    empresa confidencial, mismo cargo y ciudades compatibles ("Bogotá" vs "Colombia")."""
     if k in claves:
         return True
     cargo, _, empresa = k.partition("|")
-    if empresa.startswith("?") or len(cargo) < 15:
+    if empresa.startswith("?"):
+        ciudad = empresa[2:]
+        for otra in claves:
+            c2, _, e2 = otra.partition("|")
+            if c2 == cargo and e2.startswith("?"):
+                ciudad2 = e2[2:]
+                if (ciudad in _CIUDAD_GENERICA or ciudad2 in _CIUDAD_GENERICA
+                        or ciudad.startswith(ciudad2) or ciudad2.startswith(ciudad)):
+                    return True
+        return False
+    if len(cargo) < 15:
         return False
     for otra in claves:
         c2, _, e2 = otra.partition("|")
