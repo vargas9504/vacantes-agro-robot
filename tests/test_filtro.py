@@ -32,6 +32,9 @@ FILTRO = b.Filtro(b.cargar_config()["filtro"])
     ("Supervisor de cultivo de flores", False),
     ("Jefe de floricultura", False),
     ("Asistente de rosas exportación", False),
+    ("Prácticante en Ing. de Alimentos y/o Agroindustrial", False),
+    ("Técnico agrónomo", False),
+    ("Agrónomo de campo", True),
     ("Convocatoria cargos de infraestructura vial", False),
 ])
 def test_filtro_cargo(cargo, esperado):
@@ -78,6 +81,13 @@ def test_dedup_titulo_que_extiende_a_otro():
              _v("kitempleo-2", "Analista de Inteligencia de Negocios Agropecuario Analista Estratégico (Bogotá)",
                 "Adecco Colombia S A"),
              _v("kitempleo-3", "Analista de Inteligencia de Negocios Agropecuario", "Otra empresa")]
+    assert [v["id"] for v in b.deduplicar(items)] == ["kitempleo-1", "kitempleo-3"]
+
+
+def test_confidencial_misma_vacante_con_ciudad_generica():
+    items = [_v("kitempleo-1", "Extensionista cundinamarca (Bogotá)", "Empresa confidencial", "Bogotá"),
+             _v("kitempleo-2", "Extensionista Cundinamarca Bogotá (Colombia)", "Empresa confidencial", "Colombia"),
+             _v("kitempleo-3", "Extensionista Risaralda Pereira (Colombia)", "Empresa confidencial", "Colombia")]
     assert [v["id"] for v in b.deduplicar(items)] == ["kitempleo-1", "kitempleo-3"]
 
 
