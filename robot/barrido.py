@@ -60,17 +60,26 @@ _EMPRESA_VACIA = {"", "confidencial", "empresa confidencial", "importante empres
                   "empresa lider", "reconocida empresa", "empresa del sector", "anonimo"}
 
 
+_CIUDAD_GENERICA = {"", "colombia", "remoto", "nacional", "teletrabajo"}
+
+
+def ciudad_base(ciudad: str) -> str:
+    """'Valledupar, Cesar, Colombia' -> 'valledupar'; 'Bogotá, D.C.' -> 'bogota'; 'Colombia' -> ''."""
+    c = normalizar((ciudad or "").split(",")[0])
+    c = re.sub(r"\b(area metropolitana de|alrededores|d c|distrito capital)\b", " ", c)
+    c = re.sub(r"\s+", " ", c).strip()
+    return "" if c in _CIUDAD_GENERICA else c
+
+
 def clave_vacante(cargo: str, empresa: str, ciudad: str = "") -> str:
-    """Clave cargo+empresa normalizados para detectar la misma vacante en varias
-    ciudades o portales. Si la empresa es confidencial se añade la ciudad para no
-    fusionar vacantes distintas con un cargo genérico."""
+    """Clave 'cargo|empresa@ciudad' normalizada. Empresa confidencial -> '?'."""
     c = normalizar(re.sub(r"(\s*\([^()]*\))+\s*$", "", cargo or ""))  # "Cargo (Ciudad) (Colombia)" de KitEmpleo
     c = re.sub(r"\b(en|para|de)? ?(yopal|villavicencio|casanare|meta|tolima|cesar|huila|bogota|colombia)\b", " ", c)
     c = re.sub(r"\s+", " ", c).strip()
     e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", normalizar(empresa))).strip()
     if e in _EMPRESA_VACIA or "confidencial" in e:
-        return f"{c}|?|{normalizar(ciudad)}"
-    return f"{c}|{e}"
+        e = "?"
+    return f"{c}|{e}@{ciudad_base(ciudad)}"
 
 
 def texto(el) -> str:
@@ -696,44 +705,51 @@ def purgar_vistos(vistos: dict, dias: int, hoy: str) -> dict:
     return {portal: {k: f for k, f in ids.items() if f >= limite} for portal, ids in vistos.items()}
 
 
-_CIUDAD_GENERICA = {"", "colombia", "remoto", "nacional"}
+def _partes(k: str) -> tuple[str, str, str]:
+    base, _, ciudad = k.partition("@")
+    cargo, _, empresa = base.partition("|")
+    return cargo, empresa, ciudad
 
 
-def clave_repetida(k: str, claves) -> bool:
-    """Misma vacante: clave igual; o misma empresa y un cargo es el comienzo del otro
-    ("Analista X (Bogotá)" vs "Analista X Analista Estratégico... (Bogotá)"); o, con
-    empresa confidencial, mismo cargo y ciudades compatibles ("Bogotá" vs "Colombia")."""
-    if k in claves:
-        return True
-    cargo, _, empresa = k.partition("|")
-    if empresa.startswith("?"):
-        ciudad = empresa[2:]
-        for otra in claves:
-            c2, _, e2 = otra.partition("|")
-            if c2 == cargo and e2.startswith("?"):
-                ciudad2 = e2[2:]
-                if (ciudad in _CIUDAD_GENERICA or ciudad2 in _CIUDAD_GENERICA
-                        or ciudad.startswith(ciudad2) or ciudad2.startswith(ciudad)):
-                    return True
-        return False
-    if len(cargo) < 15:
-        return False
+def _ciudades_compatibles(a: str, b: str) -> bool:
+    return not a or not b or a.startswith(b) or b.startswith(a)
+
+
+def clave_repetida(k: str, claves, mirar_ciudad: bool = True) -> bool:
+    """¿Es la misma vacante que alguna de `claves`? Mismo cargo (o uno es el comienzo del
+    otro, >= 15 caracteres) y misma empresa. La ciudad debe ser compatible (igual, o una
+    genérica como "Colombia") cuando `mirar_ciudad` o cuando la empresa es confidencial:
+    Netafim Bucaramanga no es la misma vacante que Netafim Valledupar de la semana pasada."""
+    cargo, empresa, ciudad = _partes(k)
     for otra in claves:
-        c2, _, e2 = otra.partition("|")
-        if e2 == empresa and len(c2) >= 15 and (c2.startswith(cargo) or cargo.startswith(c2)):
-            return True
+        c2, e2, ciudad2 = _partes(otra)
+        if e2 != empresa:
+            continue
+        if not (c2 == cargo or (empresa != "?" and min(len(c2), len(cargo)) >= 15
+                                and (c2.startswith(cargo) or cargo.startswith(c2)))):
+            continue
+        if (mirar_ciudad or empresa == "?") and not _ciudades_compatibles(ciudad, ciudad2):
+            continue
+        return True
     return False
 
 
 def deduplicar(items: list[dict]) -> list[dict]:
-    """Quita repetidos dentro de una misma corrida por id y por cargo+empresa."""
-    out, ids, claves = [], set(), set()
+    """Quita repetidos dentro de una misma corrida por id y por cargo+empresa. La misma
+    vacante publicada en varias ciudades sale una vez, con las otras ciudades agregadas."""
+    out, ids, claves = [], set(), {}
     for it in items:
         k = clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""))
-        if it["id"] in ids or clave_repetida(k, claves):
+        if it["id"] in ids:
+            continue
+        previa = next((claves[o] for o in claves if clave_repetida(k, [o], mirar_ciudad=False)), None)
+        if previa is not None:
+            ciudad = limpiar(it.get("ciudad", ""))
+            if ciudad_base(ciudad) and ciudad_base(ciudad) not in normalizar(previa.get("ciudad", "")):
+                previa["ciudad"] = f'{previa.get("ciudad", "")} · {ciudad}'.strip(" ·")
             continue
         ids.add(it["id"])
-        claves.add(k)
+        claves[k] = it
         out.append(it)
     return out
 
@@ -809,7 +825,8 @@ def main(argv=None) -> int:
     ruta_vistos = datos / "vistos.json"
     corrida_inicial = not ruta_vistos.exists()
     vistos = purgar_vistos(leer_json(ruta_vistos, {}), gen.get("purgar_vistos_dias", 45), hoy)
-    claves = vistos.pop("_claves", {})
+    # claves sin "@ciudad" son del formato anterior (no distinguían ciudad): se descartan
+    claves = {k: f for k, f in vistos.pop("_claves", {}).items() if "@" in k}
     estado_prev = leer_json(datos / "estado.json", {}).get("fuentes", {})
 
     activas = [n for n in FUENTES if config["fuentes"].get(n, {}).get("activa", True)]

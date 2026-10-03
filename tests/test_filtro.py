@@ -177,3 +177,27 @@ def test_parse_elempleo_json():
     <span class="js-offer-date">Hace 4 días</span></div></div>'''
     it = b.parse_elempleo(html, "x")[0]
     assert (it["id_local"], it["empresa"], it["ciudad"], it["salario"]) == ("1886771490", "ACEPALMA", "Bucaramanga", "$6 a $8 millones")
+
+
+def test_entre_dias_otra_ciudad_es_otra_vacante():
+    vista = {b.clave_vacante("Asesor técnico comercial", "Netafim", "Valledupar, Cesar, Colombia"): "2026-09-27"}
+    bucaramanga = b.clave_vacante("Asesor técnico comercial", "Netafim", "Bucaramanga, Santander, Colombia")
+    valledupar = b.clave_vacante("Asesor técnico comercial", "Netafim", "Valledupar, Cesar")
+    generica = b.clave_vacante("Asesor técnico comercial", "Netafim", "Colombia")
+    assert not b.clave_repetida(bucaramanga, vista)
+    assert b.clave_repetida(valledupar, vista)
+    assert b.clave_repetida(generica, vista)
+
+
+def test_misma_corrida_varias_ciudades_sale_una_con_las_ciudades():
+    items = [_v("linkedin-1", "Asesor técnico comercial", "Netafim", "Valledupar, Cesar, Colombia"),
+             _v("computrabajo-2", "Asesor técnico comercial", "Netafim S.A.S.", "Bucaramanga, Santander")]
+    out = b.deduplicar(items)
+    assert [v["id"] for v in out] == ["linkedin-1"]
+    assert "Bucaramanga" in out[0]["ciudad"] and "Valledupar" in out[0]["ciudad"]
+
+
+def test_ciudad_base():
+    assert b.ciudad_base("Bogotá, D.C., Bogotá, D.C.") == "bogota"
+    assert b.ciudad_base("Bogotá alrededores") == "bogota"
+    assert b.ciudad_base("Colombia") == ""
