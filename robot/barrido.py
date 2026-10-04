@@ -827,6 +827,8 @@ def main(argv=None) -> int:
     vistos = purgar_vistos(leer_json(ruta_vistos, {}), gen.get("purgar_vistos_dias", 45), hoy)
     # claves sin "@ciudad" son del formato anterior (no distinguían ciudad): se descartan
     claves = {k: f for k, f in vistos.pop("_claves", {}).items() if "@" in k}
+    claves = completar_claves(claves, leer_historial(datos / "historial.csv"),
+                              gen.get("purgar_vistos_dias", 45), hoy)
     estado_prev = leer_json(datos / "estado.json", {}).get("fuentes", {})
 
     activas = [n for n in FUENTES if config["fuentes"].get(n, {}).get("activa", True)]
@@ -912,6 +914,18 @@ def escribir_csv(ruta: Path, filas: list[dict], modo: str):
         if cabecera:
             w.writeheader()
         w.writerows(filas)
+
+
+def completar_claves(claves: dict, historial: list[dict], dias: int, hoy: str) -> dict:
+    """Asegura que toda candidata publicada en los últimos `dias` tenga su clave
+    cargo|empresa@ciudad, aunque `vistos.json` la haya perdido (p. ej. al cambiar de formato)."""
+    limite = (datetime.fromisoformat(hoy) - timedelta(days=dias)).date().isoformat()
+    for r in historial:
+        fecha = (r.get("encontrada") or "")[:10]
+        if fecha >= limite:
+            claves.setdefault(clave_vacante(r.get("cargo", ""), r.get("empresa", ""),
+                                            (r.get("ciudad") or "").split(" · ")[0]), fecha)
+    return claves
 
 
 def leer_historial(ruta: Path) -> list[dict]:
