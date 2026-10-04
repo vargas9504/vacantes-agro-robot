@@ -201,3 +201,13 @@ def test_ciudad_base():
     assert b.ciudad_base("Bogotá, D.C., Bogotá, D.C.") == "bogota"
     assert b.ciudad_base("Bogotá alrededores") == "bogota"
     assert b.ciudad_base("Colombia") == ""
+
+
+def test_completar_claves_desde_historial():
+    historial = [{"cargo": "Líder de Operaciones de Cultivos (Puerto Gaitán)", "empresa": "DON POLLO",
+                  "ciudad": "Puerto Gaitán", "encontrada": "2026-10-02 05:05"},
+                 {"cargo": "Cargo viejo", "empresa": "X", "ciudad": "Yopal", "encontrada": "2026-07-01 05:05"}]
+    claves = b.completar_claves({}, historial, 45, "2026-10-04")
+    assert len(claves) == 1
+    k = b.clave_vacante("Líder de Operaciones de Cultivos (Puerto Gaitán)", "DON POLLO", "Puerto Gaitán")
+    assert b.clave_repetida(k, claves)
