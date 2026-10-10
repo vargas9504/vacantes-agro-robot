@@ -1,0 +1,1534 @@
+{
+"generado": "2026-10-09",
+"nota": "Semilla desde el tablero de Claude: ids y claves (cargo|empresa|ciudad) de TODAS las ofertas ya revisadas (nuevas, postuladas y descartadas) + ids vistos y descartados. El robot debe tratarlas como ya vistas.",
+"ids": {
+"fao": [
+"2502422",
+"2601945",
+"2601995",
+"2602003",
+"2602020",
+"2602037",
+"2602043",
+"2602062"
+],
+"kitempleo": [
+"90576546",
+"90609380",
+"90922477",
+"91002288",
+"91023123",
+"91033704",
+"91034361",
+"91050161",
+"91050254",
+"91128151",
+"91130245",
+"91133171",
+"91140703",
+"91144689",
+"91149390",
+"91164666",
+"91179456",
+"91179767",
+"91181499",
+"91181994",
+"91185728",
+"91205676",
+"91243414",
+"91243415",
+"91243421",
+"91308926",
+"91333047",
+"91397420",
+"91417735",
+"91433269",
+"91462463",
+"91469011",
+"91483300",
+"91484385",
+"91495393",
+"91498175",
+"91498179",
+"91522375",
+"91539684",
+"91547815",
+"91556427",
+"91556462",
+"91558882",
+"91561538",
+"91587114",
+"91589659",
+"91598212",
+"91598501",
+"91641136",
+"91641172",
+"91659532",
+"91659893",
+"91689018",
+"91701972",
+"91719926",
+"91721688",
+"91750488",
+"91754313",
+"91767429",
+"91787986",
+"91797944",
+"91797946",
+"91806550",
+"91836508",
+"91856469",
+"91856603",
+"91856691",
+"91857882",
+"91866555",
+"91870550",
+"91874123",
+"91876805",
+"91877726",
+"91877954",
+"91880185",
+"91882248",
+"91882486",
+"91883305",
+"91893576",
+"91909759",
+"91941414",
+"91942929",
+"91944692",
+"91955381",
+"91957095",
+"91993166",
+"92011486",
+"92019303",
+"92030178",
+"92046118",
+"92046303",
+"92068221",
+"92070061",
+"92071953",
+"92086161",
+"92087200",
+"92098554",
+"92102202",
+"92155227",
+"92184874",
+"92194213",
+"92222559",
+"92243809",
+"92256418",
+"92259553",
+"92264491",
+"92269445",
+"92310300",
+"92322616",
+"92357440",
+"92362541",
+"92387385",
+"92433801",
+"92456791",
+"92464010",
+"92507396",
+"92524522",
+"92530661",
+"92531784",
+"92532481",
+"92539607",
+"92582230",
+"92591266",
+"92591497",
+"92596056",
+"92603391",
+"92655093",
+"92668846",
+"92679882",
+"93182903",
+"93192867"
+],
+"computrabajo": [
+"01A2BCEC801EA562",
+"04CFB92EDD691A1D",
+"0768A3532575602E",
+"080F161090EA5798",
+"089FBA6D90F69FA0",
+"093006E3C860D190",
+"09F69144EF664800",
+"0C0342A8241BC7EC",
+"0F655C2995716C24",
+"139FC9A1DB1463DC",
+"145E378C96257C1C",
+"15748D24ECE29A8D",
+"17E3D05E529D0540",
+"17fd0b9e6ab4dddf",
+"18C6DB84C2CF883F",
+"18FE6E0CC7C64A0F",
+"18b13464cd4a45ef",
+"22BFB2B726BF70AB",
+"26CC022E6F51FEE4",
+"2795E8B8D5B0CC5D",
+"35A2B695B7F5D35B",
+"3AA9F452CEB13A5A",
+"43611C29F1CF21CD",
+"43E21AD8B43491E4",
+"475AE909B6A02180",
+"47FD04EA8507D146",
+"514E14965CCAA040",
+"51DEED1EDF230617",
+"52B15A2429E28C7C",
+"52b1d51ef85ef9be",
+"536AE06ABFDD47CD",
+"53A9D0C8E85A8056",
+"540E8B67F07C4031",
+"58E252374CA94A81",
+"627C7AA976AB2AAC",
+"649B67B75A86767E",
+"68B6F9F03DC0D1D5",
+"6ADB46316F6EF0E8",
+"6AE2116B42CEDB3C",
+"6B5F0D2E07FA4863",
+"6D4CC6E6C0074F2D",
+"710A99A4BBF535CE",
+"718787F3E8F9D22E",
+"76359313B4D1A7B8",
+"767EFAEB62A955A6",
+"7958DEA9B4B2569D",
+"7A19FE25EFD99AB6",
+"7D1C2D2002F164A6",
+"7b4906ad3470ef70",
+"829F943FE736984D",
+"85FC4EE849E9741E",
+"8ADC7F9A0767F3FE",
+"8B8A965027D2197E",
+"8BEB6EA9EB70E3DB",
+"8BF5945148B30A9F",
+"8CEA1463889F1DDF",
+"8E5F49FDA3B75744",
+"97F4D82B80081B9D",
+"9C9CBE96EF2FD57C",
+"A1B8F2DFDBFCF612",
+"A3F9B8B6B90B725B",
+"A4F8FC673E7A2429",
+"ACAE347D9037D1B4",
+"ACE1FE7738D8075E",
+"AF5032AEF098DA67",
+"B0F6907C11C73AD8",
+"B11603C0E7E37597",
+"B6E4AA7C2A7BB14D",
+"BA3F1A6D9439AFA1",
+"C16D74BBBAC947EE",
+"C293119EECDEBCFA",
+"CC65621F84ABA941",
+"D185324D57F6DA54",
+"D3B8848AE89BCDA6",
+"D53984D55E674352",
+"D5BE2E16D7EEAB06",
+"D8EFD0B7363E4743",
+"DE19ECF6FA3DFF96",
+"E179FCD4E567F4C2",
+"E19507943782046F",
+"E5509C85F1CBB0FE",
+"E7002AF42E04BAC3",
+"E82856C515163CFA",
+"EA2A330F486F1ED6",
+"F30350FA35DBD1BE",
+"F6918D3DCDFF8B08",
+"F7BE5DD3390470F5",
+"F8A70E1701EF751D",
+"F95E769F389CE22F",
+"FAA9590D9C5B6A65",
+"FBC3571A7D923F80",
+"FF73A13460AE0E74",
+"c13ff7909f82b82c"
+],
+"elempleo": [
+"1886725374",
+"1886733709",
+"1886747863",
+"1886751197",
+"1886751807",
+"1886754260",
+"1886754527",
+"1886754787",
+"1886756011",
+"1886756688",
+"1886757256",
+"1886757531",
+"1886757814",
+"1886758562",
+"1886761883",
+"1886762134",
+"1886762329",
+"1886762446",
+"1886763520",
+"1886764301",
+"1886765271",
+"1886765288",
+"1886766057",
+"1886766096",
+"1886766292",
+"1886766764",
+"1886766819",
+"1886766966",
+"1886767228",
+"1886767825",
+"1886767908",
+"1886768569",
+"1886768649",
+"1886768669",
+"1886769158",
+"1886769322",
+"1886769650",
+"1886769792",
+"1886769884",
+"1886769907",
+"1886770580",
+"1886770865",
+"1886770975",
+"1886771075",
+"1886771122",
+"1886771220",
+"1886771307",
+"1886771490",
+"1886772257",
+"1886772774",
+"1886772787",
+"1886773243",
+"1886773323",
+"1886773639",
+"1886773654",
+"1886773971",
+"1886774182",
+"1886774780",
+"1886774787",
+"1886775562",
+"1886776179",
+"1886776437",
+"1886777006",
+"1886777556",
+"1886777707"
+],
+"adama": [
+"1429815233",
+"1444033833"
+],
+"linkedin": [
+"4424222644",
+"4443185655",
+"4449752235",
+"4459845084",
+"4466226718",
+"4467662177",
+"4467817294",
+"4469056493",
+"4469263347",
+"4469267331",
+"4469281002",
+"4469739601",
+"4469911428",
+"4470410905",
+"4470493381",
+"4470940901",
+"4471499091",
+"4471812395",
+"4472100520",
+"4472212623",
+"4472213689",
+"4472224115",
+"4472541002",
+"4472955239",
+"4473006025",
+"4473013869",
+"4473039465",
+"4473267933",
+"4473272850",
+"4473363190",
+"4473560700",
+"4473563108",
+"4473570159",
+"4473760755",
+"4473926046",
+"4473970848",
+"4473990632",
+"4474100926",
+"4474105305",
+"4474544065",
+"4474550391",
+"4474614466",
+"4475593513",
+"4475822460",
+"4475825191",
+"4476324691",
+"4476503660"
+],
+"magneto": [
+"1001542",
+"1015102",
+"1076635",
+"1083072",
+"1092007"
+],
+"agrohunters": [
+"2839",
+"2840",
+"2841",
+"2842",
+"2843",
+"2844",
+"2845",
+"2846",
+"2847",
+"2848",
+"2849",
+"5012",
+"5013",
+"5014",
+"8012"
+],
+"jooble": [
+"-1542418203322522149",
+"-3271829550507610481",
+"-458775649887694120",
+"-7142160807703757760",
+"-7191290222414961277",
+"2222238422238536822",
+"3760395389593821701",
+"5823876948328942396",
+"7031024553554880351",
+"8606050728909842315"
+],
+"cenipalma": [
+"10614342",
+"10614651"
+],
+"indeed": [
+"034cd297fdb747b2",
+"07606c3de0f3891d",
+"0e52aa69dac2e00b",
+"20d0a1d4a920cccc",
+"24963b10fb266c56",
+"273a595f7f7dd522",
+"2a63e5386fec2a4c",
+"2fe22de825114800",
+"419494bc50942e0c",
+"480e00b5ccf4a06f",
+"4c86d40ac2a4b01d",
+"51d974a4fdd3000f",
+"55941b93962aa861",
+"5b805f83af80f80a",
+"6995f52d2005a38b",
+"7275fdc41fd203d7",
+"72961a4dd5b15332",
+"75d0d6c3ed87c1df",
+"7612b657c9e22883",
+"85b8bad3d3a2f2b3",
+"865ef5e216da04fb",
+"8727a7b88cc5f3ae",
+"88b3330e6a241e1f",
+"9449b96f56ecfb9a",
+"a4c5272cc170c500",
+"a5b9785e017c6fc2",
+"a9da8d18cd289af3",
+"b8fd0380d61c95c3",
+"baa1b61c47eb2331",
+"c7c71463efc82ae5",
+"e2d802617aaa0102",
+"eef46dc48251940b",
+"f72bc3ccc32613c4",
+"fafb9388cc6f8d5f"
+],
+"poligrow": [
+"13764233"
+],
+"fedepalma": [
+"investigador-mecanizacion-2026-09"
+]
+},
+"claves": [
+{
+"cargo": "Profesional misional especializado/a en implementación de proyectos",
+"empresa": "FAO Colombia",
+"ciudad": "Por confirmar, Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de Campo en Cultivos de Caña (Colombia)",
+"empresa": "Riopaila Castilla",
+"ciudad": "Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Líder Comercial Agrónomo",
+"empresa": "Logística Inteligente Solutions S.A.S",
+"ciudad": "Pasto, Nariño",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero/a Agrónomo/a",
+"empresa": "Empresa reconocida",
+"ciudad": "Villavicencio, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Coordinador/a de campo",
+"empresa": "Empresa del sector agrícola (confidencial)",
+"ciudad": "Apartadó, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Extensionista Cundinamarca",
+"empresa": "Empresa confidencial",
+"ciudad": "Bogotá y alrededores, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de Ganadería – Tolima (3 fincas)",
+"empresa": "Agroavicola Italia Ltda",
+"ciudad": "Ibagué, Tolima",
+"estado": "descartada"
+},
+{
+"cargo": "Representante de ventas – sector agrícola (material vegetal de berries) – Bogotá",
+"empresa": "Empresa confidencial",
+"ciudad": "Bogotá, Distrito Capital",
+"estado": "descartada"
+},
+{
+"cargo": "Supervisor o Líder Agrícola / Supervisor de cosecha de caña",
+"empresa": "Agencia de Empleo Comfenalco Valle (cliente)",
+"ciudad": "Palmira / Candelaria / Florida / Pradera, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo – Café (asistencia técnica regenerativa)",
+"empresa": "Temporarios S.A. (exportadora de café)",
+"ciudad": "Neiva, Huila",
+"estado": "descartada"
+},
+{
+"cargo": "Director Centro de Investigación Agropecuaria (C.I. La Libertad, Meta / C.I. Turipaná, Córdoba)",
+"empresa": "Agrosavia",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo/a para San Pedro de los Milagros",
+"empresa": "AGENCIA DE EMPLEO COMFAMA",
+"ciudad": "San Pedro",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Técnico Comercial – Tolima",
+"empresa": "ADAMA",
+"ciudad": "Tolima (zona; sede de nómina Barranquilla)",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador(a) de Producción Agrícola",
+"empresa": "Gente Útil S.A.",
+"ciudad": "Lebrija, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Representante Técnico Comercial Tolima",
+"empresa": "Importante empresa del sector de Agroinsumos (confidencial)",
+"ciudad": "Ibagué, Tolima",
+"estado": "nueva"
+},
+{
+"cargo": "Ingeniero agrónomo – 2 años de experiencia en manejo de cultivos",
+"empresa": "Importante empresa del sector (laboratorio de análisis de suelos, aguas y fertilizantes)",
+"ciudad": "Bogotá, Bogotá D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe técnico comercial – zona Antioquia",
+"empresa": "Acepalma",
+"ciudad": "Medellín",
+"estado": "descartada"
+},
+{
+"cargo": "Representante de Ventas – Quindío y Risaralda",
+"empresa": "Gowan Company",
+"ciudad": "Quindío / Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor/a técnico/a comercial (agricultura protegida e invernaderos)",
+"empresa": "Vía Servicio de Empleo Comfama",
+"ciudad": "Medellín",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico de ventas agro – sur del Huila (café, hortalizas y frutales)",
+"empresa": "Disan",
+"ciudad": "Sur del Huila, Huila",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Técnico Comercial Agrícola – Popayán",
+"empresa": "Adecco Colombia",
+"ciudad": "Popayán, Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Gestor de Innovación y Proyectos Agroindustriales",
+"empresa": "Cenipalma",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Agronegocios",
+"empresa": "Logística Inteligente Solutions S.A.S",
+"ciudad": "Duitama, Boyacá",
+"estado": "postulada"
+},
+{
+"cargo": "Promotor de desarrollo rural",
+"empresa": "Confidencial",
+"ciudad": "Neiva, Huila",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador de Infraestructura Colombia",
+"empresa": "Camposol",
+"ciudad": "Dosquebradas, Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Consultor Comercial – Maquinaria Agrícola y agricultura de precisión",
+"empresa": "Eficacia (temporal)",
+"ciudad": "Villavicencio, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Coordinador I+D (Ingeniero Agrónomo)",
+"empresa": "Importante empresa del sector (confidencial)",
+"ciudad": "Medellín, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Profesional en procesos administrativos agropecuarios",
+"empresa": "Temporizar Servicios Temporales SAS",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "postulada"
+},
+{
+"cargo": "Consultor estratégico de negocio – Maquinaria Agrícola",
+"empresa": "Adecco Colombia S.A. (cliente: comercializadora automotriz/maquinaria)",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Comercial Antioquia (agroinsumos)",
+"empresa": "Point de Colombia SAS",
+"ciudad": "Rionegro, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Director Regional Comercial y Operaciones Zona Norte",
+"empresa": "Global Motor S.A.S.",
+"ciudad": "Montería, Córdoba",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero Agrónomo – área planeación",
+"empresa": "Proservis (temporal; cliente del sector alimentos)",
+"ciudad": "Ipiales, Nariño",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de planta agroindustrial",
+"empresa": "Confidencial",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo (ventas en campo)",
+"empresa": "Gi Group Colombia (temporal)",
+"ciudad": "Cali, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de Área – sector floricultor",
+"empresa": "Importante empresa del sector",
+"ciudad": "Tabio, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Asociado de Investigación – Forrajes Tropicales (RFP 301447)",
+"empresa": "Alliance Bioversity & CIAT",
+"ciudad": "Palmira, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Director de Desarrollo Agroindustrial",
+"empresa": "Michael Page (cliente confidencial)",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico comercial ganadería",
+"empresa": "Laboratorios Calier",
+"ciudad": "Montería",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor comercial línea fumigadoras",
+"empresa": "AgroHunters (cliente)",
+"ciudad": "Cali, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente de Planta – Molinos de arroz",
+"empresa": "Importante empresa del sector arrocero (confidencial)",
+"ciudad": "Villavicencio, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Agrónomo Comercial con Vehículo - Oriente Antioqueño",
+"empresa": "Infotree Global",
+"ciudad": "Oriente Antioqueño, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Director agroindustrial",
+"empresa": "Confidencial",
+"ciudad": "Barranquilla, Atlántico",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Comercial de Tractores (Llanos Orientales)",
+"empresa": "General Motor S.A.S. (Global Motor)",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor técnico comercial",
+"empresa": "Netafim",
+"ciudad": "Bucaramanga, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente de nuevos negocios – agroindustria de la palma de aceite",
+"empresa": "Confidencial (alineado con Fedepalma)",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "administrador para finca arrocera y ganadera",
+"empresa": "Importante empresa del sector",
+"ciudad": "Hato Corozal, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de ventas zona centro-norte – industria de la palma de aceite",
+"empresa": "TECNINTEGRAL S.A.S",
+"ciudad": "Bogotá",
+"estado": "descartada"
+},
+{
+"cargo": "Head of Production (producción agrícola)",
+"empresa": "Emerald Lane Recruitment (headhunter)",
+"ciudad": "Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente de Producción – planta de fertilizantes",
+"empresa": "GERENCIA SELECTA (empresa de suministro de fertilizantes)",
+"ciudad": "Buenaventura, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico y comercial – portafolio de agroquímicos (Sur-occidente)",
+"empresa": "Agrohunters (cliente: agroquímicos)",
+"ciudad": "Nariño y Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero/a Agrónomo/a – Palma de aceite y gestión de operación de plantación",
+"empresa": "Acierta Headhunter (empresa palmera confidencial)",
+"ciudad": "Villavicencio, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Supervisor de Campo",
+"empresa": "Riopaila Castilla",
+"ciudad": "Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Profesional en procesos administrativos agropecuarios",
+"empresa": "Elempleo (aviso en Jooble; empresa no indicada)",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Asociado de Investigación – Laboratorio de Calidad de Arroz",
+"empresa": "Swiss Forum for International Agricultural Research",
+"ciudad": "Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Representante Técnico Comercial – Cultivo de flores (Sabana Occidente)",
+"empresa": "Grupo Levapan",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Promotor de desarrollo técnico en campo – Boyacá centro",
+"empresa": "Agrohunters (cliente: insumos papa/hortalizas)",
+"ciudad": "Tunja (preferible), Boyacá",
+"estado": "descartada"
+},
+{
+"cargo": "Ejecutivo Comercial Externo (Venta de productos agrícolas/ferretería)",
+"empresa": "Adecco Colombia S.A.",
+"ciudad": "Bogotá, D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Director/a Agropecuario (Ing. Agrónomo o Adm. Empresas Agropecuarias)",
+"empresa": "Telcos Ingeniería S.A. (vía ManpowerGroup)",
+"ciudad": "Bogotá, con desplazamiento a Chima (Santander) y Puerto Berrío (Antioquia)",
+"estado": "descartada"
+},
+{
+"cargo": "Director Centro de Investigación Agropecuaria (La Libertad, Meta / Turipaná, Córdoba)",
+"empresa": "Agrosavia",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Auditor de operación de cultivos Administrativo (Puerto Gaitán)",
+"empresa": "DON POLLO",
+"ciudad": "Puerto Gaitán",
+"estado": "descartada"
+},
+{
+"cargo": "Responsable comercial de Tecnopalma",
+"empresa": "Cenipalma / Fedepalma",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Líder Agrícola - Lebrija (Metropolitana)",
+"empresa": "GENTE UTIL",
+"ciudad": "Metropolitana",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo – Campo (frutales de exportación)",
+"empresa": "Importante empresa del sector",
+"ciudad": "Restrepo, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Director/a de Operaciones – empresa agrícola (agricultura de precisión, costos y presupuesto)",
+"empresa": "Servicio de Empleo Comfama (cliente agrícola)",
+"ciudad": "Apartadó, Antioquia",
+"estado": "postulada"
+},
+{
+"cargo": "Supervisor Agrícola",
+"empresa": "Camposol S.A",
+"ciudad": "Pácora, Caldas",
+"estado": "descartada"
+},
+{
+"cargo": "Extensionista Risaralda Pereira (Colombia)",
+"empresa": "Empresa confidencial",
+"ciudad": "Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador de Calidad y Producción – Finca Quipile (café y panela)",
+"empresa": "Staffing de Colombia",
+"ciudad": "Quipile, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador agropecuario",
+"empresa": "Inversiones Cravo Sur SAS",
+"ciudad": "Orocué, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo (sector floricultor)",
+"empresa": "Importante empresa del sector",
+"ciudad": "Funza, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Extensionista cundinamarca (Bogotá)",
+"empresa": "Empresa confidencial",
+"ciudad": "Bogotá",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador de finca bananera",
+"empresa": "Importante empresa del sector agrícola",
+"ciudad": "Apartadó, Urabá, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Agronomo Técnico Promotor Comercial de Campo (Tunja)",
+"empresa": "BIOFARMERS SHEEP",
+"ciudad": "Tunja",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero Agrónomo de Extensión – Líder Rural Cafetalero",
+"empresa": "Federación Nacional de Cafeteros",
+"ciudad": "Sur del Valle del Cauca, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Supervisor en Cultivos de Palma",
+"empresa": "Empresa de control fitosanitario en palma",
+"ciudad": "Yopal y Maní, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Director/a de recursos humanos | agroindustria palmera |operación rural (Villavicencio)",
+"empresa": "Acierta Headhunter",
+"ciudad": "Villavicencio",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador de empresas agropecuarias",
+"empresa": "Santerra de Colombia SAS",
+"ciudad": "Bello, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Operativo de Campo - Ingeniero Agrónomo, Experiencia en Aguacate",
+"empresa": "Desarrollos de Latinoamérica",
+"ciudad": "Aguadas, Caldas",
+"estado": "descartada"
+},
+{
+"cargo": "Field Trialist (ensayos de campo)",
+"empresa": "Syngenta",
+"ciudad": "Villavicencio, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Coordinador/Supervisor Técnico Local (TCP/COL/4101)",
+"empresa": "FAO Colombia",
+"ciudad": "Montería, Córdoba",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor comercial agrícola B2B (con moto)",
+"empresa": "Importante empresa del sector agrotecnológico",
+"ciudad": "Funza, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador técnico, innovación y proyectos de mercadeo – cultivo de papa",
+"empresa": "Agrohunters (cliente: insumos/papa)",
+"ciudad": "Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero de Finca – Especialista en Berries",
+"empresa": "Global SAS (empresa hortícola)",
+"ciudad": "Mosquera, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador investigación y desarrollo semillas de arroz",
+"empresa": "INTEROC S.A. Sucursal Colombia",
+"ciudad": "Ibagué, Tolima",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador/a de finca para Urabá",
+"empresa": "Servicio de Empleo Comfama (cliente bananero)",
+"ciudad": "Apartadó, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Operativo de Campo (Ingeniero Agrónomo, aguacate)",
+"empresa": "Vista Desarrollos de Latinoamérica",
+"ciudad": "Aguadas, Caldas",
+"estado": "descartada"
+},
+{
+"cargo": "Auditor de procesos agronómicos – sector palma (agrónomo profesional)",
+"empresa": "MULTISOLUCIONES A&A SAS",
+"ciudad": "Maní, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de Ventas Arroz – Tolima",
+"empresa": "ADAMA",
+"ciudad": "Tolima (ciudad no especificada)",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador agropecuario",
+"empresa": "Zorba Lácteos / Hacienda Chicamocha S.A.S",
+"ciudad": "San Antonio del Tequendama, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Agente Técnico Comercial Eje Cafetero",
+"empresa": "Semillas Arroyave S.A.S",
+"ciudad": "Pereira, Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo / ingeniero agrícola",
+"empresa": "FUPAD",
+"ciudad": "Arauquita, Arauca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo con posgrado – Ibagué / Norte del Tolima",
+"empresa": "Empresa confidencial",
+"ciudad": "Ibagué, Tolima",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo (finca de cultivos)",
+"empresa": "CICO CONSTRUCCIONES SAS",
+"ciudad": "Cubarral, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Asistente de investigación I – fisiología vegetal o fitotecnia",
+"empresa": "Cenipalma / Fedepalma",
+"ciudad": "Barrancabermeja, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Director Agrícola",
+"empresa": "Global SAS",
+"ciudad": "Madrid, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Extensionista Risaralda",
+"empresa": "Empresa confidencial",
+"ciudad": "Pereira, Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Asistente de Extensión II – enfoque fitosanitario, Zona Suroccidental",
+"empresa": "Cenipalma",
+"ciudad": "Tumaco, Nariño",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador de Calidad planta extractora",
+"empresa": "Poligrow",
+"ciudad": "Mapiripán, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente De Nuevos Negocios Bilingüe – Agroindustria Palma (Cundinamarca)",
+"empresa": "Confidential",
+"ciudad": "Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Director de operaciones – procesadora agroindustrial de frutas",
+"empresa": "Human One (cliente agroindustrial)",
+"ciudad": "Rionegro, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Desarrollista – Ingeniero(a) Agrónomo(a) I+D semillas",
+"empresa": "Semillas Arroyave S.A.",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador de Finca",
+"empresa": "Centro de Empleo y Talento Colsubsidio",
+"ciudad": "Bogotá, D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador de proyecto agrícola",
+"empresa": "Frutinal",
+"ciudad": "Rionegro, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Gestor de Campo territorial (Economía Popular)",
+"empresa": "UT Eco Popular",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Especialista Regional en Agricultura (drones agrícolas, distribuidores)",
+"empresa": "Geosystem",
+"ciudad": "Bogotá, Distrito Capital",
+"estado": "postulada"
+},
+{
+"cargo": "Administrador agropecuario",
+"empresa": "Punta de Garzas Inversiones Forestales",
+"ciudad": "Cumaribo, Vichada",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de Territorio Puntos de Venta – Zona Costa",
+"empresa": "DUCOL GROUP SAS (Grupo Ducol)",
+"ciudad": "Valledupar, Cesar",
+"estado": "postulada"
+},
+{
+"cargo": "Ingeniero agrónomo",
+"empresa": "FUPAD",
+"ciudad": "Tierralta, Córdoba",
+"estado": "descartada"
+},
+{
+"cargo": "Profesional misional en producción agrícola (TCP/COL/4101)",
+"empresa": "FAO Colombia",
+"ciudad": "Tierralta, Córdoba",
+"estado": "descartada"
+},
+{
+"cargo": "Desarrollista Ingeniero Agrónomo",
+"empresa": "Semillas Arroyave S.A.",
+"ciudad": "Bogotá, D.C.",
+"estado": "postulada"
+},
+{
+"cargo": "Ejecutivo de ventas – Representante técnico comercial de insumos agrícolas (palma), zona Cesar y Norte de Santander",
+"empresa": "Cenipalma",
+"ciudad": "Sabana de Torres, Santander / San Alberto o San Martín, Cesar",
+"estado": "descartada"
+},
+{
+"cargo": "Supervisor de Recursos Hídricos",
+"empresa": "Riopaila Castilla",
+"ciudad": "Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Líder Agrícola",
+"empresa": "Gente Útil S.A.",
+"ciudad": "Lebrija / Bucaramanga, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Representante Técnico Comercial – Antioquia (Rionegro y Norte)",
+"empresa": "Point de Colombia SAS",
+"ciudad": "Rionegro, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Representante Técnico Comercial Agrónomo",
+"empresa": "DUCOL GROUP",
+"ciudad": "Bucaramanga, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe MIPE – Clavel",
+"empresa": "Elite Flower",
+"ciudad": "Bogotá y Sabana, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Comercial – equipos de medición, drones y GNSS para agricultura",
+"empresa": "DATUM Ingeniería S.A.S",
+"ciudad": "Puerto López, Meta",
+"estado": "postulada"
+},
+{
+"cargo": "Investigador Asociado I – Líder de Mecanización (Zona Oriental)",
+"empresa": "Cenipalma",
+"ciudad": "Restrepo-Cumaral, Meta / Paratebueno, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Auditor en Control Interno",
+"empresa": "Importante empresa del sector Agricola",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Director Administrativo (empresa agroindustrial)",
+"empresa": "GWAIA S.A.S",
+"ciudad": "Yopal, Casanare",
+"estado": "postulada"
+},
+{
+"cargo": "Ingeniero/a Agrónomo/a - Palma de Aceite y Gestión de Operación de Plantación",
+"empresa": "Acierta Headhunter (cliente confidencial agroindustrial palmero)",
+"ciudad": "Bogotá, D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Auditor de campo y operaciones agrícolas",
+"empresa": "Confidencial",
+"ciudad": "Armenia, Quindío",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente/a de proyecto – reactivación económica cadena de pesca y acuicultura",
+"empresa": "FAO Colombia",
+"ciudad": "Tumaco, Nariño",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de Planta – Santa Marta",
+"empresa": "C.I. Acepalma S.A.",
+"ciudad": "Santa Marta, Magdalena",
+"estado": "descartada"
+},
+{
+"cargo": "Profesional de Abastecimiento Agrícola – Logística Nacional",
+"empresa": "Ingredion",
+"ciudad": "Cali, Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico comercial – Ingeniero agrónomo (Santander)",
+"empresa": "Acepalma",
+"ciudad": "Bucaramanga, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Técnico Comercial Agroindustria Caña Barranquilla (Colombia)",
+"empresa": "Adama Agricultural Solutions",
+"ciudad": "Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador/a en ganadería",
+"empresa": "Agencia de Empleo Comfama (cliente)",
+"ciudad": "Puerto Nare, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero Agrónomo – Cultivos de Alto Valor (técnico comercial)",
+"empresa": "TECH INDUSTRIES",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Director(a) de agronomía",
+"empresa": "Confidencial",
+"ciudad": "Bogotá",
+"estado": "postulada"
+},
+{
+"cargo": "Profesional Agrónomo (Asistencia Técnica y Desarrollo Rural)",
+"empresa": "CMH Colombia",
+"ciudad": "Puerto Libertador, Córdoba",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador(a) de Proyectos Agrícolas",
+"empresa": "Gente Útil S.A.",
+"ciudad": "Bucaramanga, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Técnico Comercial (Caña) – Valle del Cauca",
+"empresa": "ADAMA",
+"ciudad": "Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Auditor de operación de cultivos (Puerto Gaitán)",
+"empresa": "Don Pollo S",
+"ciudad": "Puerto Gaitán",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo/a 1",
+"empresa": "Corprogreso",
+"ciudad": "Yopal, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Profesional misional especializado en gestión de alianzas interinstitucionales",
+"empresa": "FAO Colombia",
+"ciudad": "Yopal, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Supervisor de Riego Agrícola",
+"empresa": "No indicada",
+"ciudad": "Bogotá, D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero Agrónomo de Campo",
+"empresa": "ManpowerGroup (cliente confidencial)",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "postulada"
+},
+{
+"cargo": "Ingeniero agrónomo",
+"empresa": "Importante empresa del sector (confidencial)",
+"ciudad": "Chía, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Comercial Agrícola – Costa",
+"empresa": "Importante empresa del sector",
+"ciudad": "Valledupar, Cesar",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor comercial externo / Productos Agrícolas",
+"empresa": "Adecco Colombia S.A.",
+"ciudad": "Medellín, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Director de mercadeo, portafolio de agroquímicos Colombia",
+"empresa": "Agrohunters (cliente: protección de cultivos, agroquímicos y bioinsumos)",
+"ciudad": "Bogotá, Cundinamarca (también Medellín o Cali)",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de Finca – Rosa",
+"empresa": "Elite Flower",
+"ciudad": "Bogotá y Sabana, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo – café (BPA y certificaciones)",
+"empresa": "ECOM LATAM",
+"ciudad": "Socorro, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Administración de finca bananera",
+"empresa": "Importante empresa del sector agrícola",
+"ciudad": "Carepa, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico comercial – Sonsón",
+"empresa": "Colinagro S.A.",
+"ciudad": "Sonsón, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor técnico comercial Eje Cafetero – insumos agrícolas",
+"empresa": "Agrohunters (cliente: agroinsumos)",
+"ciudad": "Manizales / Pereira, Caldas y Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Asistente de Extensión II – enfoque fitosanitario, Zona Oriental (Meta, Casanare y Vichada)",
+"empresa": "Cenipalma",
+"ciudad": "Villavicencio, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo Analista Operativo",
+"empresa": "Importante empresa del sector",
+"ciudad": "Abejorral, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero(a) Agrónomo(a) Junior – Desarrollo de Proyectos Agrícolas (riego y drenaje)",
+"empresa": "Adecco Colombia (cliente confidencial)",
+"ciudad": "Cartagena, Bolívar",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero/a agrónomo/a de campo",
+"empresa": "Vía Servicio de Empleo Comfama",
+"ciudad": "Medellín",
+"estado": "descartada"
+},
+{
+"cargo": "Representante de Ventas – Yopal / Aguazul",
+"empresa": "Gowan Company",
+"ciudad": "Yopal / Aguazul, Casanare",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor Técnico Comercial (Caña)",
+"empresa": "ADAMA",
+"ciudad": "Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Gerente General – empresa de maquinaria, equipos y soluciones para la agroindustria",
+"empresa": "Confidencial",
+"ciudad": "Bogotá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Líder De Operaciones De Cultivos (Puerto Gaitán)",
+"empresa": "DON POLLO",
+"ciudad": "Puerto Gaitán",
+"estado": "descartada"
+},
+{
+"cargo": "Agrónomo de Riego (Banano/Palma) – Consultor Técnico",
+"empresa": "Quintall",
+"ciudad": "Santa Marta, Magdalena",
+"estado": "descartada"
+},
+{
+"cargo": "Director(a) de Agronomía",
+"empresa": "Petra Group (cliente agroindustrial)",
+"ciudad": "Bogotá (Usaquén), Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo comercial con experiencia en palma – Zona Norte (TecnoPalma)",
+"empresa": "Cenipalma",
+"ciudad": "Valledupar, Cesar",
+"estado": "descartada"
+},
+{
+"cargo": "Monitor de Labores Agrícolas",
+"empresa": "Riopaila Castilla",
+"ciudad": "Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Líder de Proyectos Agrícolas",
+"empresa": "Importante empresa del sector",
+"ciudad": "Lebrija, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor comercial línea infraestructura agrícola – Cundiboyacá",
+"empresa": "Agrohunters (cliente: invernaderos/infraestructura)",
+"ciudad": "Cundinamarca y Boyacá",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor/a Técnico Comercial (riego en palma de aceite)",
+"empresa": "Netafim",
+"ciudad": "Valledupar, Cesar",
+"estado": "descartada"
+},
+{
+"cargo": "Analista de Innovación",
+"empresa": "Cenipalma",
+"ciudad": "Bogotá",
+"estado": "descartada"
+},
+{
+"cargo": "Extensionista comite valle (Colombia)",
+"empresa": "Federaciondecafeteros",
+"ciudad": "Colombia",
+"estado": "descartada"
+},
+{
+"cargo": "Representante Técnico Comercial Agrónomo – San Alberto",
+"empresa": "DUCOL GROUP SAS",
+"ciudad": "Bucaramanga, Santander (zona San Alberto)",
+"estado": "descartada"
+},
+{
+"cargo": "Representante técnico comercial – Eje Cafetero",
+"empresa": "Bio-Crop",
+"ciudad": "Pereira, Risaralda",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe MIPE – Rosa (Finca Circasia)",
+"empresa": "Elite Flower",
+"ciudad": "Bogotá y Sabana, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Representante de Ventas - Sector Agrícola Medellín",
+"empresa": "Empresa confidencial",
+"ciudad": "Medellín, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe MIPE – Diversificados (finca Florex)",
+"empresa": "The Elite Flower",
+"ciudad": "Madrid, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de mantenimiento taller agrícola",
+"empresa": "Confidencial",
+"ciudad": "Tumaco, Nariño",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero Agrónomo Bilingüe (cultivo indoor)",
+"empresa": "CONFI",
+"ciudad": "Tocancipá, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Ingeniero agrónomo",
+"empresa": "Santerra de Colombia SAS",
+"ciudad": "Bello, Antioquia",
+"estado": "descartada"
+},
+{
+"cargo": "Coordinador Regional-Territorial",
+"empresa": "FUPAD",
+"ciudad": "Puerto Gaitán, Meta",
+"estado": "descartada"
+},
+{
+"cargo": "Business Development Manager Agro (Ing. Agrónomo)",
+"empresa": "Evolución RH",
+"ciudad": "Bogotá, D.C.",
+"estado": "descartada"
+},
+{
+"cargo": "Asesor comercial – Ingeniero agrónomo – manejo de drones",
+"empresa": "Confidencial (tecnología agrícola, drones de fumigación)",
+"ciudad": "Tolima",
+"estado": "postulada"
+},
+{
+"cargo": "Director Financiero y Administrativo",
+"empresa": "AgroHunters (cliente agro)",
+"ciudad": "Mosquera, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Representante comercial Eje Cafetero y Valle – semillas de hortalizas",
+"empresa": "Agrohunters (cliente: semillas)",
+"ciudad": "Pereira / La Unión, Risaralda y Valle del Cauca",
+"estado": "descartada"
+},
+{
+"cargo": "Administrador agroindustrial (Líder de Proyectos Agrícolas)",
+"empresa": "Gente Útil S.A. (temporal)",
+"ciudad": "Lebrija, Santander",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe de Área – Crisantemo",
+"empresa": "Elite Flower",
+"ciudad": "Bogotá y Sabana, Cundinamarca",
+"estado": "descartada"
+},
+{
+"cargo": "Director Agropecuario",
+"empresa": "Manpower Group Colombia (Telcos Ingeniería)",
+"ciudad": "Bogotá",
+"estado": "descartada"
+},
+{
+"cargo": "Jefe técnico comercial zona Antioquia",
+"empresa": "Acepalma",
+"ciudad": "Medellín",
+"estado": "descartada"
+},
+{
+"cargo": "Líder Agrícola",
+"empresa": "GENTE UTIL",
+"ciudad": "Lebrija",
+"estado": "descartada"
+}
+]
+}

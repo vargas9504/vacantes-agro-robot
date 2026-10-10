@@ -1,67 +1,187 @@
-# Reglas del robot de vacantes. Puedes editar este archivo sin tocar el código.
-# Las regex se evalúan sin distinguir mayúsculas.
-
 filtro:
-  # X: si el CARGO coincide, se descarta.
-  excluir: >-
-    aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[oó]log|t[eé]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|\bflor(es|icultura|icultor)?\b|\brosas?\b|\bclavel|crisantemo|pomp[oó]n|mipe|junior|egresad|sin experiencia|la palma\b|seguridad|siso|\bsst\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina
-  # P: se incluye solo si el CARGO o el TEXTO DE LA TARJETA coincide.
-  incluir: >-
-    agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda|agricultur|\bdron|ensayos? (de campo|agr)|\btrials?\b|investigaci[oó]n agr|ganader
-  # Se descarta si la CIUDAD / ubicación coincide (KitEmpleo mezcla avisos de otros países).
-  excluir_ubicacion: >-
-    argentina|buenos aires|c[oó]rdoba, arg|mendoza|santa fe, arg|per[uú]\b|lima, per|chile|m[eé]xico|ecuador|espa[nñ]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[aá]|costa rica|estados unidos|united states
-
+  excluir: "aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[o\xF3\
+    ]log|t[e\xE9]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|\\\
+    bflor(es|icultura|icultor)?\\b|\\brosas?\\b|\\bclavel|crisantemo|pomp[o\xF3]n|mipe|junior|egresad|sin\
+    \ experiencia|la palma\\b|seguridad|siso|\\bsst\\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina|sistemas|software|\\\
+    bseo\\b|abogad|contador|contabil|tesorer|recursos humanos|talento humano|reclutad|chef|ferreter|supervisor\
+    \ de personal|promotor|mallas|molienda"
+  incluir: "agr[o\xF3]n|agr[i\xED]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[e\xE9\
+    ]cnico.?comercial|representante t[e\xE9]cn|asesor t[e\xE9]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda|agricultur|\\\
+    bdron|ensayos? (de campo|agr)|\\btrials?\\b|investigaci[o\xF3]n agr|ganader"
+  excluir_ubicacion: "argentina|buenos aires|c[o\xF3]rdoba, arg|mendoza|santa fe,\
+    \ arg|per[u\xFA]\\b|lima, per|chile|m[e\xE9]xico|ecuador|espa[n\xF1]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[a\xE1\
+    ]|costa rica|estados unidos|united states"
+  excluir_empresa: ofertasynegocios|novalfarm|simpalm|elite flower|supernumerarios
+  excluir_cargo_empresa: "abogad|analista de laboratorio|contab|compras|jur[i\xED\
+    ]dic"
 general:
-  purgar_vistos_dias: 45     # los ids vistos se olvidan después de N días
-  dias_pagina: 7             # la página muestra también las de los últimos N días
+  purgar_vistos_dias: 45
+  dias_pagina: 7
   timeout: 30
-  intervalo_dominio: 1.1     # segundos mínimos entre peticiones al mismo dominio
-  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-
+  intervalo_dominio: 1.1
+  user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
+    like Gecko) Chrome/128.0.0.0 Safari/537.36
 fuentes:
   computrabajo:
     activa: true
     paginas_max: 3
-    # trabajo-de-<slug>?pubdate=7
-    slugs_7dias: [ingeniero-agronomo, agronomo, administrador-agropecuario, administrador-agricola, administrador-de-finca, jefe-agricola, coordinador-agricola, director-agricola, jefe-de-plantacion, palma, agroinsumos, agroquimicos, semillas, fertilizantes, arroz, extensionista]
-    # trabajo-de-<slug>-en-<zona>?pubdate=15
-    slugs_zona: [ingeniero-agronomo, agronomo, agricola, palma]
-    zonas: [casanare, meta, tolima, cesar]
-    # trabajo-de-<slug> SIN pubdate (las ofertas "actualizadas" no salen con pubdate)
-    slugs_sin_fecha: [ingeniero-agronomo, agronomo, administrador-agropecuario, director-agricola, ingeniero-agronomo-en-meta, ingeniero-agronomo-en-casanare, agronomo-en-meta, agronomo-en-casanare]
-    # rutas completas extra
-    rutas_extra: ["/empleos-en-casanare?pubdate=7"]
-
+    slugs_7dias:
+    - ingeniero-agronomo
+    - agronomo
+    - administrador-agropecuario
+    - administrador-agricola
+    - administrador-de-finca
+    - jefe-agricola
+    - coordinador-agricola
+    - director-agricola
+    - jefe-de-plantacion
+    - palma
+    - agroinsumos
+    - agroquimicos
+    - semillas
+    - fertilizantes
+    - arroz
+    - extensionista
+    slugs_zona:
+    - ingeniero-agronomo
+    - agronomo
+    - agricola
+    - palma
+    zonas:
+    - casanare
+    - meta
+    - tolima
+    - cesar
+    slugs_sin_fecha:
+    - ingeniero-agronomo
+    - agronomo
+    - administrador-agropecuario
+    - director-agricola
+    - ingeniero-agronomo-en-meta
+    - ingeniero-agronomo-en-casanare
+    - agronomo-en-meta
+    - agronomo-en-casanare
+    rutas_extra:
+    - /empleos-en-casanare?pubdate=7
   elempleo:
     activa: true
-    slugs: [ingeniero-agronomo, agronomo, administrador-agropecuario, administrador-de-finca, jefe-de-finca, director-administrativo, palma, arroz, asesor-tecnico-comercial, agricola, casanare, yopal, villavicencio, agroindustria, cultivos, agricultura, dron, jefe-agricola, coordinador-agricola]
+    slugs:
+    - ingeniero-agronomo
+    - agronomo
+    - administrador-agropecuario
+    - administrador-de-finca
+    - jefe-de-finca
+    - director-administrativo
+    - palma
+    - arroz
+    - asesor-tecnico-comercial
+    - agricola
+    - casanare
+    - yopal
+    - villavicencio
+    - agroindustria
+    - cultivos
+    - agricultura
+    - dron
+    - jefe-agricola
+    - coordinador-agricola
     max_dias: 15
-
   linkedin:
     activa: true
     pausa: 1.5
     paginas_max: 10
-    terminos_colombia: [agrónomo, "ingeniero agrónomo", agrícola, "administrador agropecuario", "administrador de finca", "asesor técnico comercial", "representante técnico comercial", "coordinador agronómico", "coordinador de producción agrícola", "jefe de producción agrícola", "director agrícola", extensionista, palma, arroz, agroinsumos, semillas, fertilizantes]
-    terminos_region: [agrónomo, agrícola]
-    regiones: ["Casanare, Colombia", "Meta, Colombia", "Villavicencio, Meta, Colombia", "Tolima, Colombia", "Cesar, Colombia", "Huila, Colombia"]
-
+    terminos_colombia:
+    - "agr\xF3nomo"
+    - "ingeniero agr\xF3nomo"
+    - "agr\xEDcola"
+    - administrador agropecuario
+    - administrador de finca
+    - "asesor t\xE9cnico comercial"
+    - "representante t\xE9cnico comercial"
+    - "coordinador agron\xF3mico"
+    - "coordinador de producci\xF3n agr\xEDcola"
+    - "jefe de producci\xF3n agr\xEDcola"
+    - "director agr\xEDcola"
+    - extensionista
+    - palma
+    - arroz
+    - agroinsumos
+    - semillas
+    - fertilizantes
+    terminos_region:
+    - "agr\xF3nomo"
+    - "agr\xEDcola"
+    regiones:
+    - Casanare, Colombia
+    - Meta, Colombia
+    - Villavicencio, Meta, Colombia
+    - Tolima, Colombia
+    - Cesar, Colombia
+    - Huila, Colombia
   kitempleo:
     activa: true
     max_dias: 30
-    terminos: [ingeniero agronomo, agronomo, administrador agropecuario, administrador de finca, director agricola, asesor tecnico comercial agricola, representante tecnico comercial, palma, arroz, agroinsumos, Casanare, Yopal, Villavicencio, Cenipalma, Agrosavia, agricultura, agroindustria, cultivos, semillas, fertilizantes, extensionista]
-
+    terminos:
+    - ingeniero agronomo
+    - agronomo
+    - administrador agropecuario
+    - administrador de finca
+    - director agricola
+    - asesor tecnico comercial agricola
+    - representante tecnico comercial
+    - palma
+    - arroz
+    - agroinsumos
+    - Casanare
+    - Yopal
+    - Villavicencio
+    - Cenipalma
+    - Agrosavia
+    - agricultura
+    - agroindustria
+    - cultivos
+    - semillas
+    - fertilizantes
+    - extensionista
   indeed:
     activa: true
-    terminos: [ingeniero agronomo, agronomo, administrador agropecuario, agricola, palma, arroz, asesor tecnico comercial agricola]
-
+    terminos:
+    - ingeniero agronomo
+    - agronomo
+    - administrador agropecuario
+    - agricola
+    - palma
+    - arroz
+    - asesor tecnico comercial agricola
   pandape:
     activa: true
-    # Aquí NO se aplica el filtro P (solo X): todo lo de estas empresas es agro.
     portales:
       cenipalma: https://cenipalma.pandape.computrabajo.com/Vacancies
       poligrow: https://poligrow-colombia.pandape.computrabajo.com/Vacancies
-
   jooble:
     activa: true
-    rutas: [/trabajo-ingeniero-agronomo, /trabajo-administrador-agropecuario]
+    rutas:
+    - /trabajo-ingeniero-agronomo
+    - /trabajo-administrador-agropecuario
+  agrohunters:
+    activa: true
+  adama:
+    activa: true
+  syngenta:
+    activa: true
+  yara:
+    activa: true
+  riopaila:
+    activa: true
+  manuelita:
+    activa: true
+  fedepalma:
+    activa: true
+  agrosavia:
+    activa: true
+  fao_un:
+    activa: true
+  magneto:
+    activa: true
+  elempleo_empresa:
+    activa: true

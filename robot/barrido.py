@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as cf
 import csv
+import hashlib
 import html
 import json
 import logging
@@ -28,7 +29,9 @@ from bs4 import BeautifulSoup
 RAIZ = Path(__file__).resolve().parent.parent
 TZ_CO = timezone(timedelta(hours=-5), "America/Bogota")  # Colombia no tiene horario de verano
 CAMPOS = ["id", "portal", "cargo", "empresa", "ciudad", "publicada", "salario", "url",
-          "fuente_busqueda", "encontrada"]
+          "fuente_busqueda", "encontrada",
+          "publicada_iso", "edad_dias", "cierre_iso", "vencida",
+          "perfil_sugerido", "zona_preferida", "empresa_confidencial", "repost_probable", "via_descripcion"]
 
 log = logging.getLogger("barrido")
 
@@ -71,15 +74,26 @@ def ciudad_base(ciudad: str) -> str:
     return "" if c in _CIUDAD_GENERICA else c
 
 
-def clave_vacante(cargo: str, empresa: str, ciudad: str = "") -> str:
-    """Clave 'cargo|empresa@ciudad' normalizada. Empresa confidencial -> '?'."""
-    c = normalizar(re.sub(r"(\s*\([^()]*\))+\s*$", "", cargo or ""))  # "Cargo (Ciudad) (Colombia)" de KitEmpleo
+def clave_vacante(cargo: str, empresa: str, ciudad: str = "", salario: str = "") -> str:
+    """Clave 'cargo|empresa@ciudad#salario' normalizada. Empresa confidencial -> '?'."""
+    c = re.sub(r"/a\b|/o\b|/as\b|/os\b", "", (cargo or "").lower())
+    c = normalizar(re.sub(r"(\s*\([^()]*\))+\s*$", "", c))
     c = re.sub(r"\b(en|para|de)? ?(yopal|villavicencio|casanare|meta|tolima|cesar|huila|bogota|colombia)\b", " ", c)
     c = re.sub(r"\s+", " ", c).strip()
-    e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", normalizar(empresa))).strip()
-    if e in _EMPRESA_VACIA or "confidencial" in e:
+    
+    e = normalizar(empresa)
+    e = re.sub(r"\bvia\s+[a-z0-9 ]+", " ", e)
+    e = re.sub(r"\(?cliente\b.*?\)?", " ", e)
+    e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", e)).strip()
+    
+    agencias = ["manpower", "adecco", "acierta", "michael page", "zohorecruit", "gente util", "supernumerarios", "human one"]
+    if e in _EMPRESA_VACIA or "confidencial" in e or "reconocida empresa" in e or "importante empresa" in e or "otra empresa" in e or e == "elempleo" or any(ag in e for ag in agencias):
         e = "?"
-    return f"{c}|{e}@{ciudad_base(ciudad)}"
+        
+    k = f"{c}|{e}@{ciudad_base(ciudad)}"
+    if e == "?" and re.search(r"\b(lider|jefe|coordinador|director|gerente|asesor)\b", c):
+        k = f"{k}#{normalizar(salario or '')}"
+    return k
 
 
 def texto(el) -> str:
@@ -141,6 +155,8 @@ class Filtro:
         self.x = re.compile(limpiar(reglas["excluir"]), f)
         self.p = re.compile(limpiar(reglas["incluir"]), f)
         self.u = re.compile(limpiar(reglas.get("excluir_ubicacion") or r"(?!x)x"), f)
+        self.x_emp = re.compile(limpiar(reglas.get("excluir_empresa") or r"(?!x)x"), f)
+        self.x_cargo_emp = re.compile(limpiar(reglas.get("excluir_cargo_empresa") or r"(?!x)x"), f)
 
     @staticmethod
     def _busca(rx, txt: str) -> bool:
@@ -148,8 +164,16 @@ class Filtro:
         t = (txt or "").translate(_GRAVES)
         return bool(rx.search(t) or rx.search(sin_tildes(t)))
 
-    def excluido(self, cargo: str) -> bool:
-        return self._busca(self.x, cargo)
+    def excluido(self, cargo: str, empresa: str = "") -> bool:
+        if self._busca(self.x, cargo):
+            return True
+        if empresa and self._busca(self.x_emp, empresa):
+            return True
+        # For palm/agro companies, exclude non-agro roles
+        if empresa and re.search(r"(palma|agro|cenipalma|fedepalma|fedearroz|agrosavia)", empresa, re.I):
+            if self._busca(self.x_cargo_emp, cargo):
+                return True
+        return False
 
     def incluido(self, cargo: str, tarjeta: str = "") -> bool:
         return self._busca(self.p, cargo) or self._busca(self.p, tarjeta)
@@ -157,8 +181,8 @@ class Filtro:
     def ubicacion_excluida(self, ciudad: str) -> bool:
         return self._busca(self.u, ciudad)
 
-    def pasa(self, cargo: str, tarjeta: str = "", ciudad: str = "", aplicar_p: bool = True) -> bool:
-        if not cargo or self.excluido(cargo) or self.ubicacion_excluida(ciudad):
+    def pasa(self, cargo: str, tarjeta: str = "", ciudad: str = "", aplicar_p: bool = True, empresa: str = "") -> bool:
+        if not cargo or self.excluido(cargo, empresa) or self.ubicacion_excluida(ciudad):
             return False
         return self.incluido(cargo, tarjeta) if aplicar_p else True
 
@@ -396,7 +420,7 @@ def _contenedor(a, ids_en, max_sube: int = 8):
 def detalle_elempleo(ctx, item: dict) -> bool:
     """Abre el detalle: fecha de publicación, salario, ciudad. False = descartar (vieja)."""
     f = fecha_desde_texto(item["publicada"]) if item["publicada"] else None
-    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 15) + 7:
+    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 30) + 7:
         return False  # el listado ya dice "hace 1 mes": no vale la pena abrir el detalle
     r = ctx["http"].get(item["url"])
     sopa = BeautifulSoup(r.text, "html.parser")
@@ -416,7 +440,7 @@ def detalle_elempleo(ctx, item: dict) -> bool:
     if not item["ciudad"]:
         item["ciudad"] = _ciudad_colombia(full)
     f = fecha_desde_texto(item["publicada"]) if item["publicada"] else None
-    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 15):
+    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 30):
         return False
     return True
 
@@ -510,6 +534,25 @@ def parse_kitempleo(html_txt: str, busqueda: str) -> list[dict]:
                          icono("fa-pencil"), icono("fa-map-marker"), icono("fa-calendar"),
                          _salario(full), full))
     return out
+
+
+def detalle_kitempleo(ctx, item: dict) -> bool:
+    f = fecha_desde_texto(item["publicada"]) if item["publicada"] else None
+    if f and (ahora_co() - f).days > ctx["cfg"].get("max_dias", 30) + 7:
+        return False
+    r = ctx["http"].get(item["url"])
+    sopa = BeautifulSoup(r.text, "html.parser")
+    full = texto(sopa.body or sopa)
+    
+    m_pub = re.search(r"Publicado\s*:\s*(.*?)(?:\s*-|$)", full, re.I)
+    if m_pub:
+        item["publicada"] = m_pub[1]
+    
+    m_cierre = re.search(r"(?:cierre|vencimiento|vence)\s*[:el]*\s*(\d{1,2}\s+(?:de\s+)?[a-z]{3}\.?[\sde]*\d{4})", full, re.I)
+    if m_cierre:
+        item["_cierre_texto"] = m_cierre[1]
+    item['_desc_text'] = full
+    return True
 
 
 def fuente_kitempleo(ctx) -> list[dict]:
@@ -642,37 +685,35 @@ def fuente_pandape(ctx) -> list[dict]:
 # ---- G. Jooble
 
 def parse_jooble(html_txt: str, busqueda: str) -> list[dict]:
-    sopa = BeautifulSoup(html_txt, "html.parser")
-    patron = re.compile(r"/(?:jdp|desc)/(-?\d+)")
-    out, vistos = [], set()
-    for a in sopa.find_all("a", href=patron):
-        oid = patron.search(a["href"])[1]
-        if oid in vistos:
-            continue
-        vistos.add(oid)
-        card = _contenedor(a, lambda el: {patron.search(x["href"])[1] for x in el.find_all("a", href=patron)})
-        h = card.find(["h2", "h3"])
-        cargo = texto(h) if h else texto(a)
-        full = texto(card)
-        emp = card.select_one("[data-test-name=_companyName], [class*=company]")
-        ciu = card.select_one("[data-test-name=_jobLocation], [class*=location]")
-        pub = ""
-        mf = re.search(r"(hace [^,.|]{1,20}|hoy|ayer)", full, re.I)
-        if mf:
-            pub = mf[1]
-        out.append(_item(oid.lstrip("-"), cargo, urljoin("https://co.jooble.org", a["href"]), busqueda,
-                         texto(emp), texto(ciu) or _ciudad_colombia(full), pub, _salario(full), full))
-    return out
-
+    return []
 
 def fuente_jooble(ctx) -> list[dict]:
     cfg, http = ctx["cfg"], ctx["http"]
     items = []
+    api_key = os.environ.get("JOOBLE_API_KEY")
+    if not api_key:
+        raise ValueError("Falta JOOBLE_API_KEY en variables de entorno (bloqueado)")
     for ruta in cfg.get("rutas", []):
-        r = http.get(urljoin("https://co.jooble.org", ruta), intentos=2, intentos_429=1)
-        items += parse_jooble(r.text, ruta.strip("/"))
+        keyword = ruta.replace("/trabajo-", "").replace("-", " ")
+        r = http.post(f"https://jooble.org/api/{api_key}", json={"keywords": keyword, "location": "Colombia"}, intentos=2, intentos_429=1)
+        if r.status_code != 200:
+            raise ValueError(f"Jooble API HTTP {r.status_code}")
+        for j in r.json().get("jobs", []):
+            items.append({
+                "fuente_busqueda": ruta.strip("/"),
+                "id_local": str(j.get("id")),
+                "url": j.get("link"),
+                "cargo": limpiar(j.get("title", "")),
+                "empresa": limpiar(j.get("company", "")),
+                "ciudad": limpiar(j.get("location", "")),
+                "salario": limpiar(j.get("salary", "")),
+                "publicada": j.get("updated", "")
+            })
     return items
 
+
+def fuente_generica(ctx):
+    raise ValueError("Fuente requiere implementacion del parser")
 
 # Orden = prioridad al deduplicar por cargo+empresa (la primera fuente gana).
 FUENTES = {
@@ -682,7 +723,18 @@ FUENTES = {
     "linkedin": {"listar": fuente_linkedin},
     "indeed": {"listar": fuente_indeed},
     "jooble": {"listar": fuente_jooble},
-    "kitempleo": {"listar": fuente_kitempleo},
+    "kitempleo": {"listar": fuente_kitempleo, "detalle": detalle_kitempleo},
+    "agrohunters": {"listar": fuente_generica},
+    "adama": {"listar": fuente_generica},
+    "syngenta": {"listar": fuente_generica},
+    "yara": {"listar": fuente_generica},
+    "riopaila": {"listar": fuente_generica},
+    "manuelita": {"listar": fuente_generica},
+    "fedepalma": {"listar": fuente_generica},
+    "agrosavia": {"listar": fuente_generica},
+    "fao_un": {"listar": fuente_generica},
+    "magneto": {"listar": fuente_generica},
+    "elempleo_empresa": {"listar": fuente_generica},
 }
 
 
@@ -705,31 +757,36 @@ def purgar_vistos(vistos: dict, dias: int, hoy: str) -> dict:
     return {portal: {k: f for k, f in ids.items() if f >= limite} for portal, ids in vistos.items()}
 
 
-def _partes(k: str) -> tuple[str, str, str]:
-    base, _, ciudad = k.partition("@")
+def _partes(k: str) -> tuple[str, str, str, str]:
+    base, _, salario = k.partition("#")
+    base, _, ciudad = base.partition("@")
     cargo, _, empresa = base.partition("|")
-    return cargo, empresa, ciudad
+    return cargo, empresa, ciudad, salario
 
 
 def _ciudades_compatibles(a: str, b: str) -> bool:
-    return not a or not b or a.startswith(b) or b.startswith(a)
+    if not a or not b or a.startswith(b) or b.startswith(a):
+        return True
+    if ("bogota" in a and "cundinamarca" in b) or ("bogota" in b and "cundinamarca" in a):
+        return True
+    if ("metropolitana" in a and ("lebrija" in b or "bucaramanga" in b)) or ("metropolitana" in b and ("lebrija" in a or "bucaramanga" in a)):
+        return True
+    return False
 
 
 def clave_repetida(k: str, claves, mirar_ciudad: bool = True) -> bool:
-    """¿Es la misma vacante que alguna de `claves`? Mismo cargo (o uno es el comienzo del
-    otro, >= 15 caracteres) y misma empresa. La ciudad debe ser compatible (igual, o una
-    genérica como "Colombia") cuando `mirar_ciudad` o cuando la empresa es confidencial:
-    Netafim Bucaramanga no es la misma vacante que Netafim Valledupar de la semana pasada."""
-    cargo, empresa, ciudad = _partes(k)
+    cargo, empresa, ciudad, salario = _partes(k)
     for otra in claves:
-        c2, e2, ciudad2 = _partes(otra)
-        if e2 != empresa:
+        c2, e2, ciudad2, salario2 = _partes(otra)
+        if not (c2 == cargo or (min(len(c2), len(cargo)) >= 14 and (c2.startswith(cargo) or cargo.startswith(c2)))):
             continue
-        if not (c2 == cargo or (empresa != "?" and min(len(c2), len(cargo)) >= 15
-                                and (c2.startswith(cargo) or cargo.startswith(c2)))):
+        if e2 != "?" and empresa != "?" and not (e2 in empresa or empresa in e2):
             continue
-        if (mirar_ciudad or empresa == "?") and not _ciudades_compatibles(ciudad, ciudad2):
+        if (mirar_ciudad or empresa == "?" or e2 == "?") and not _ciudades_compatibles(ciudad, ciudad2):
             continue
+        if (empresa == "?" or e2 == "?") and re.search(r"\b(lider|jefe|coordinador|director|gerente|asesor)\b", cargo):
+            if salario and salario2 and salario != salario2:
+                continue
         return True
     return False
 
@@ -739,7 +796,7 @@ def deduplicar(items: list[dict]) -> list[dict]:
     vacante publicada en varias ciudades sale una vez, con las otras ciudades agregadas."""
     out, ids, claves = [], set(), {}
     for it in items:
-        k = clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""))
+        k = clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""), it.get("salario", ""))
         if it["id"] in ids:
             continue
         previa = next((claves[o] for o in claves if clave_repetida(k, [o], mirar_ciudad=False)), None)
@@ -772,7 +829,13 @@ def seleccionar(portal: str, listados: list[dict], filtro: Filtro, vistos: dict,
         es_nuevo = idl not in ya
         if es_nuevo:
             ya[idl] = hoy
-        if it.get("_viejo") or not filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], aplicar_p):
+        pasa = filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], aplicar_p, it.get("empresa", ""))
+        if not pasa and aplicar_p and not filtro.excluido(it["cargo"], it.get("empresa", "")) and not filtro.ubicacion_excluida(it.get("ciudad", "")):
+            if re.search(r"\b(l[ií]der|jefe|coordinador|director|gerente|asesor|representante|ingeniero|especialista|investigador|desarrollista)\b", it["cargo"], re.IGNORECASE | re.UNICODE):
+                it["_requiere_detalle"] = True
+                pasa = True
+
+        if it.get("_viejo") or not pasa:
             continue
         n_filtro += 1
         if not es_nuevo:
@@ -831,6 +894,19 @@ def main(argv=None) -> int:
                               gen.get("purgar_vistos_dias", 45), hoy)
     estado_prev = leer_json(datos / "estado.json", {}).get("fuentes", {})
 
+    semilla_aplicada = ""
+    semilla = leer_json(datos / "semilla_tablero.json", {})
+    if semilla:
+        semilla_aplicada = hoy
+        f_sem = hoy
+        for portal, list_ids in semilla.get("ids", {}).items():
+            ya_portal = vistos.setdefault(portal, {})
+            for id_v in list_ids:
+                ya_portal[str(id_v)] = f_sem
+        for cl in semilla.get("claves", []):
+            k = clave_vacante(cl.get("cargo", ""), cl.get("empresa", ""), cl.get("ciudad", ""), cl.get("salario", ""))
+            claves[k] = f_sem
+
     activas = [n for n in FUENTES if config["fuentes"].get(n, {}).get("activa", True)]
     if args.solo:
         pedidas = {s.strip() for s in args.solo.split(",")}
@@ -841,7 +917,14 @@ def main(argv=None) -> int:
         resultados = {n: f.result() for n, f in futuros.items()}
 
     estado_fuentes, nuevas = {}, []
+    descartadas = []
     encontrada = inicio.strftime("%Y-%m-%d %H:%M")
+    n_segunda_pasada = 0
+    
+    # Check history for repost
+    historial_full = leer_historial(datos / "historial.csv")
+    claves_historicas = {clave_vacante(r.get("cargo", ""), r.get("empresa", ""), (r.get("ciudad") or "").split(" · ")[0], r.get("salario", "")) for r in historial_full}
+
     for nombre in activas:  # en orden de prioridad
         res = resultados[nombre]
         spec = FUENTES[nombre]
@@ -849,8 +932,9 @@ def main(argv=None) -> int:
         cand, n_filtro = seleccionar(nombre, res["listados"], filtro, vistos, hoy,
                                      spec.get("aplicar_p", True))
         n_nuevas = 0
+        antiguas_filtradas = 0
         for it in cand:
-            k = clave_vacante(it["cargo"], it["empresa"], it["ciudad"])
+            k = clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""), it.get("salario", ""))
             if clave_repetida(k, claves):  # misma vacante ya vista en otra ciudad/portal
                 continue
             if spec.get("detalle"):
@@ -859,20 +943,85 @@ def main(argv=None) -> int:
                         continue
                 except Exception as e:  # noqa: BLE001
                     _aviso(res["ctx"], f"detalle {it['url']}: {e}")
+                    
+            if it.get("_requiere_detalle"):
+                desc = it.get("_desc_text", "")
+                if not desc:
+                    if n_segunda_pasada < 30:
+                        n_segunda_pasada += 1
+                        time.sleep(1)
+                        try:
+                            r_det = res["ctx"]["http"].get(it["url"])
+                            s_det = BeautifulSoup(r_det.text, "html.parser")
+                            for oculto in s_det.select(".hide, .hidden, script, style"):
+                                oculto.decompose()
+                            desc = texto(s_det.body or s_det)
+                        except Exception as e:
+                            _aviso(res["ctx"], f"segunda pasada {it['url']}: {e}")
+                            continue
+                    else:
+                        continue # Skip because we reached limit
+                
+                rx_agro = r"\b(ingenier[oa] agr[oó]n|agr[oó]nomo|administrador agropecuario|ingenier[ií]a agron|agropecuari|cultivos? de|palma de aceite|arroz)\b"
+                if re.search(rx_agro, desc, re.IGNORECASE | re.UNICODE):
+                    it["via_descripcion"] = True
+                else:
+                    continue
+                    
+            f_pub = fecha_desde_texto(it.get("publicada") or "", inicio)
+            it["publicada_iso"] = f_pub.strftime("%Y-%m-%d") if f_pub else ""
+            it["edad_dias"] = (inicio - f_pub).days if f_pub else None
+            
+            f_cierre = fecha_desde_texto(it.get("_cierre_texto") or "", inicio)
+            it["cierre_iso"] = f_cierre.strftime("%Y-%m-%d") if f_cierre else ""
+            it["vencida"] = bool(f_cierre and f_cierre.date() < inicio.date())
+            
+            if it["vencida"] or (it["edad_dias"] is not None and it["edad_dias"] > 30 and not f_cierre):
+                it["motivo"] = "vencida" if it["vencida"] else "antigua >30"
+                descartadas.append({"id": it.get("id"), "cargo": it.get("cargo"), "empresa": it.get("empresa"), "motivo": it["motivo"]})
+                antiguas_filtradas += 1
+                continue
+                
+            c_lo = normalizar(it["cargo"])
+            if re.search(r"\b(agr[oó]nom|extensi|investigaci|ensayo|auditor)\b", c_lo):
+                it["perfil_sugerido"] = 3
+            elif re.search(r"\b(director|jefe|gerente|administrador|coordinador|l[ií]der|proyectos)\b", c_lo):
+                it["perfil_sugerido"] = 1
+            elif re.search(r"\b(t[eé]cnico.?comercial|representante|asesor|ventas|comercial)\b", c_lo):
+                it["perfil_sugerido"] = 2
+            
+            z_lo = normalizar(it.get("ciudad", ""))
+            it["zona_preferida"] = bool(re.search(r"\b(casanare|meta|vichada|arauca|cesar|magdalena|santander|nariño|tolima|huila)\b", z_lo))
+            
+            e_lo = normalizar(it.get("empresa", ""))
+            it["empresa_confidencial"] = (e_lo in _EMPRESA_VACIA or "confidencial" in e_lo)
+            it["repost_probable"] = (k in claves_historicas)
+            it["via_descripcion"] = False
+            
             claves[k] = hoy
             it["encontrada"] = encontrada
             nuevas.append({c: it.get(c, "") for c in CAMPOS})
             n_nuevas += 1
         # registrar también las claves de candidatas ya vistas, para dedup entre portales
         for it in res["listados"]:
-            if filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], spec.get("aplicar_p", True)):
-                claves.setdefault(clave_vacante(it["cargo"], it["empresa"], it["ciudad"]), hoy)
+            if filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], spec.get("aplicar_p", True), it.get("empresa", "")):
+                claves.setdefault(clave_vacante(it["cargo"], it["empresa"], it.get("ciudad", ""), it.get("salario", "")), hoy)
+                
+        # Calculate filtradas_por_X and filtradas_por_P for estado.json
+        f_x = sum(1 for it in res["listados"] if filtro.excluido(it["cargo"], it.get("empresa", "")))
+        f_p = sum(1 for it in res["listados"] if not filtro.excluido(it["cargo"], it.get("empresa", "")) and not filtro.incluido(it["cargo"], it.get("tarjeta", "")))
+        dups = len(res["listados"]) - len({i["id_local"] for i in res["listados"]})
+        
         estado_fuentes[nombre] = {
             "estado": res["estado"],
             "listados": len(res["listados"]),
             "unicos": len({i["id_local"] for i in res["listados"]}),
             "candidatas": n_filtro,
             "nuevas": n_nuevas,
+            "filtradas_por_X": f_x,
+            "filtradas_por_P": f_p,
+            "duplicadas": dups,
+            "antiguas": antiguas_filtradas,
             "duracion_s": res["duracion_s"],
             "peticiones": res["ctx"]["http"].peticiones,
             "error": res["error"],
@@ -889,6 +1038,13 @@ def main(argv=None) -> int:
     escribir_json(datos / "nuevas.json", nuevas)
     escribir_csv(datos / "nuevas.csv", nuevas, modo="w")
     escribir_csv(datos / "historial.csv", nuevas, modo="a")
+    
+    if descartadas:
+        ruta_desc = datos / "descartadas_por_antiguas.json"
+        prev_desc = leer_json(ruta_desc, [])
+        prev_desc.extend(descartadas)
+        escribir_json(ruta_desc, prev_desc)
+
     estado = {
         "ultima_corrida": inicio.strftime("%Y-%m-%d %H:%M"),
         "ultima_corrida_iso": inicio.isoformat(timespec="seconds"),
@@ -896,6 +1052,8 @@ def main(argv=None) -> int:
         "fuentes_iniciales": [n for n, e in estado_fuentes.items() if e.get("inicial")],
         "total_nuevas": len(nuevas),
         "duracion_s": round((ahora_co() - inicio).total_seconds(), 1),
+        "version_config": hashlib.md5(Path(args.config).read_bytes()).hexdigest(),
+        "semilla_aplicada": semilla_aplicada,
         "fuentes": estado_fuentes,
     }
     escribir_json(datos / "estado.json", estado)
@@ -944,9 +1102,20 @@ ETIQUETA = {"ok": ("OK", "ok"), "vacio": ("Sin datos", "warn"), "error": ("Error
 
 def _tarjeta_html(v: dict) -> str:
     e = html.escape
-    extra = " · ".join(e(x) for x in (v.get("ciudad"), v.get("publicada")) if x)
+    extra_parts = [e(x) for x in (v.get("ciudad"), v.get("publicada")) if x]
+    if v.get("edad_dias") is not None:
+        extra_parts.append(f"hace {v['edad_dias']} días")
+    extra = " · ".join(extra_parts)
+    
     sal = f'<p class="sal">{e(v["salario"])}</p>' if v.get("salario") else ""
-    return (f'<article class="card"><div class="top"><span class="portal">{e(v.get("portal", ""))}</span>'
+    
+    tags = ""
+    if v.get("perfil_sugerido"):
+        tags += f'<span class="portal" style="background:#444">P{v["perfil_sugerido"]}</span> '
+    if v.get("repost_probable"):
+        tags += f'<span class="portal" style="background:#b7791f">Posible Repost</span> '
+        
+    return (f'<article class="card"><div class="top"><div>{tags}<span class="portal">{e(v.get("portal", ""))}</span></div>'
             f'<span class="when">{e(v.get("encontrada", ""))}</span></div>'
             f'<h3>{e(v.get("cargo", ""))}</h3><p class="emp">{e(v.get("empresa") or "Empresa no indicada")}</p>'
             f'<p class="meta">{extra}</p>{sal}'
