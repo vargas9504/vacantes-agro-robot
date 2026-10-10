@@ -87,7 +87,7 @@ def clave_vacante(cargo: str, empresa: str, ciudad: str = "", salario: str = "")
     e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", e)).strip()
     
     agencias = ["manpower", "adecco", "acierta", "michael page", "zohorecruit", "gente util", "supernumerarios", "human one"]
-    if e in _EMPRESA_VACIA or "confidencial" in e or any(ag in e for ag in agencias):
+    if e in _EMPRESA_VACIA or "confidencial" in e or "reconocida empresa" in e or "importante empresa" in e or "otra empresa" in e or e == "elempleo" or any(ag in e for ag in agencias):
         e = "?"
         
     k = f"{c}|{e}@{ciudad_base(ciudad)}"
@@ -551,6 +551,7 @@ def detalle_kitempleo(ctx, item: dict) -> bool:
     m_cierre = re.search(r"(?:cierre|vencimiento|vence)\s*[:el]*\s*(\d{1,2}\s+(?:de\s+)?[a-z]{3}\.?[\sde]*\d{4})", full, re.I)
     if m_cierre:
         item["_cierre_texto"] = m_cierre[1]
+    item['_desc_text'] = full
     return True
 
 
@@ -755,14 +756,20 @@ def _partes(k: str) -> tuple[str, str, str, str]:
 
 
 def _ciudades_compatibles(a: str, b: str) -> bool:
-    return not a or not b or a.startswith(b) or b.startswith(a)
+    if not a or not b or a.startswith(b) or b.startswith(a):
+        return True
+    if ("bogota" in a and "cundinamarca" in b) or ("bogota" in b and "cundinamarca" in a):
+        return True
+    if ("metropolitana" in a and ("lebrija" in b or "bucaramanga" in b)) or ("metropolitana" in b and ("lebrija" in a or "bucaramanga" in a)):
+        return True
+    return False
 
 
 def clave_repetida(k: str, claves, mirar_ciudad: bool = True) -> bool:
     cargo, empresa, ciudad, salario = _partes(k)
     for otra in claves:
         c2, e2, ciudad2, salario2 = _partes(otra)
-        if not (c2 == cargo or (min(len(c2), len(cargo)) >= 15 and (c2.startswith(cargo) or cargo.startswith(c2)))):
+        if not (c2 == cargo or (min(len(c2), len(cargo)) >= 14 and (c2.startswith(cargo) or cargo.startswith(c2)))):
             continue
         if e2 != "?" and empresa != "?" and not (e2 in empresa or empresa in e2):
             continue
@@ -813,7 +820,13 @@ def seleccionar(portal: str, listados: list[dict], filtro: Filtro, vistos: dict,
         es_nuevo = idl not in ya
         if es_nuevo:
             ya[idl] = hoy
-        if it.get("_viejo") or not filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], aplicar_p, it.get("empresa", "")):
+        pasa = filtro.pasa(it["cargo"], it["tarjeta"], it["ciudad"], aplicar_p, it.get("empresa", ""))
+        if not pasa and aplicar_p and not filtro.excluido(it["cargo"], it.get("empresa", "")) and not filtro.ubicacion_excluida(it.get("ciudad", "")):
+            if re.search(r"\b(l[ií]der|jefe|coordinador|director|gerente|asesor|representante|ingeniero|especialista|investigador|desarrollista)\b", it["cargo"], re.IGNORECASE | re.UNICODE):
+                it["_requiere_detalle"] = True
+                pasa = True
+
+        if it.get("_viejo") or not pasa:
             continue
         n_filtro += 1
         if not es_nuevo:
@@ -897,6 +910,7 @@ def main(argv=None) -> int:
     estado_fuentes, nuevas = {}, []
     descartadas = []
     encontrada = inicio.strftime("%Y-%m-%d %H:%M")
+    n_segunda_pasada = 0
     
     # Check history for repost
     historial_full = leer_historial(datos / "historial.csv")
@@ -920,6 +934,30 @@ def main(argv=None) -> int:
                         continue
                 except Exception as e:  # noqa: BLE001
                     _aviso(res["ctx"], f"detalle {it['url']}: {e}")
+                    
+            if it.get("_requiere_detalle"):
+                desc = it.get("_desc_text", "")
+                if not desc:
+                    if n_segunda_pasada < 30:
+                        n_segunda_pasada += 1
+                        time.sleep(1)
+                        try:
+                            r_det = res["ctx"]["http"].get(it["url"])
+                            s_det = BeautifulSoup(r_det.text, "html.parser")
+                            for oculto in s_det.select(".hide, .hidden, script, style"):
+                                oculto.decompose()
+                            desc = texto(s_det.body or s_det)
+                        except Exception as e:
+                            _aviso(res["ctx"], f"segunda pasada {it['url']}: {e}")
+                            continue
+                    else:
+                        continue # Skip because we reached limit
+                
+                rx_agro = r"\b(ingenier[oa] agr[oó]n|agr[oó]nomo|administrador agropecuario|ingenier[ií]a agron|agropecuari|cultivos? de|palma de aceite|arroz)\b"
+                if re.search(rx_agro, desc, re.IGNORECASE | re.UNICODE):
+                    it["via_descripcion"] = True
+                else:
+                    continue
                     
             f_pub = fecha_desde_texto(it.get("publicada") or "", inicio)
             it["publicada_iso"] = f_pub.strftime("%Y-%m-%d") if f_pub else ""
