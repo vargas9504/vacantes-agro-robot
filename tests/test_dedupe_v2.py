@@ -39,3 +39,11 @@ def test_rol_salario():
     
     k3 = b.clave_vacante("Gerente Agricola", "Confidencial", "Cali", "$10.000.000")
     assert b.clave_repetida(k3, claves)
+
+def test_segunda_pasada():
+    cfg = b.cargar_config()
+    filtro = b.Filtro(cfg["filtro"])
+    # Should fail normal pasa since it's not agro
+    assert not filtro.pasa("Lider de Territorio Puntos de Venta", "", "Bogota", True, "Ducol")
+    # But it should pass if we don't apply P
+    assert filtro.pasa("Lider de Territorio Puntos de Venta", "", "Bogota", False, "Ducol")

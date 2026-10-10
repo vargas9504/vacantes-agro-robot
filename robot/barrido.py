@@ -685,37 +685,35 @@ def fuente_pandape(ctx) -> list[dict]:
 # ---- G. Jooble
 
 def parse_jooble(html_txt: str, busqueda: str) -> list[dict]:
-    sopa = BeautifulSoup(html_txt, "html.parser")
-    patron = re.compile(r"/(?:jdp|desc)/(-?\d+)")
-    out, vistos = [], set()
-    for a in sopa.find_all("a", href=patron):
-        oid = patron.search(a["href"])[1]
-        if oid in vistos:
-            continue
-        vistos.add(oid)
-        card = _contenedor(a, lambda el: {patron.search(x["href"])[1] for x in el.find_all("a", href=patron)})
-        h = card.find(["h2", "h3"])
-        cargo = texto(h) if h else texto(a)
-        full = texto(card)
-        emp = card.select_one("[data-test-name=_companyName], [class*=company]")
-        ciu = card.select_one("[data-test-name=_jobLocation], [class*=location]")
-        pub = ""
-        mf = re.search(r"(hace [^,.|]{1,20}|hoy|ayer)", full, re.I)
-        if mf:
-            pub = mf[1]
-        out.append(_item(oid.lstrip("-"), cargo, urljoin("https://co.jooble.org", a["href"]), busqueda,
-                         texto(emp), texto(ciu) or _ciudad_colombia(full), pub, _salario(full), full))
-    return out
-
+    return []
 
 def fuente_jooble(ctx) -> list[dict]:
     cfg, http = ctx["cfg"], ctx["http"]
     items = []
+    api_key = os.environ.get("JOOBLE_API_KEY")
+    if not api_key:
+        raise ValueError("Falta JOOBLE_API_KEY en variables de entorno (bloqueado)")
     for ruta in cfg.get("rutas", []):
-        r = http.get(urljoin("https://co.jooble.org", ruta), intentos=2, intentos_429=1)
-        items += parse_jooble(r.text, ruta.strip("/"))
+        keyword = ruta.replace("/trabajo-", "").replace("-", " ")
+        r = http.post(f"https://jooble.org/api/{api_key}", json={"keywords": keyword, "location": "Colombia"}, intentos=2, intentos_429=1)
+        if r.status_code != 200:
+            raise ValueError(f"Jooble API HTTP {r.status_code}")
+        for j in r.json().get("jobs", []):
+            items.append({
+                "fuente_busqueda": ruta.strip("/"),
+                "id_local": str(j.get("id")),
+                "url": j.get("link"),
+                "cargo": limpiar(j.get("title", "")),
+                "empresa": limpiar(j.get("company", "")),
+                "ciudad": limpiar(j.get("location", "")),
+                "salario": limpiar(j.get("salary", "")),
+                "publicada": j.get("updated", "")
+            })
     return items
 
+
+def fuente_generica(ctx):
+    raise ValueError("Fuente requiere implementacion del parser")
 
 # Orden = prioridad al deduplicar por cargo+empresa (la primera fuente gana).
 FUENTES = {
@@ -726,6 +724,17 @@ FUENTES = {
     "indeed": {"listar": fuente_indeed},
     "jooble": {"listar": fuente_jooble},
     "kitempleo": {"listar": fuente_kitempleo, "detalle": detalle_kitempleo},
+    "agrohunters": {"listar": fuente_generica},
+    "adama": {"listar": fuente_generica},
+    "syngenta": {"listar": fuente_generica},
+    "yara": {"listar": fuente_generica},
+    "riopaila": {"listar": fuente_generica},
+    "manuelita": {"listar": fuente_generica},
+    "fedepalma": {"listar": fuente_generica},
+    "agrosavia": {"listar": fuente_generica},
+    "fao_un": {"listar": fuente_generica},
+    "magneto": {"listar": fuente_generica},
+    "elempleo_empresa": {"listar": fuente_generica},
 }
 
 

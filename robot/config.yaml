@@ -1,15 +1,19 @@
 filtro:
-  excluir: aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[oó]log|t[eé]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|\bflor(es|icultura|icultor)?\b|\brosas?\b|\bclavel|crisantemo|pomp[oó]n|mipe|junior|egresad|sin
-    experiencia|la palma\b|seguridad|siso|\bsst\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina|sistemas|software|\bseo\b|abogad|contador|contabil|tesorer|recursos
-    humanos|talento humano|reclutad|chef|ferreter|supervisor de personal|promotor|mallas|molienda
-  incluir: agr[oó]n|agr[ií]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[eé]cnico.?comercial|representante
-    t[eé]cn|asesor t[eé]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda|agricultur|\bdron|ensayos?
-    (de campo|agr)|\btrials?\b|investigaci[oó]n agr|ganader
-  excluir_ubicacion: argentina|buenos aires|c[oó]rdoba, arg|mendoza|santa fe, arg|per[uú]\b|lima,
-    per|chile|m[eé]xico|ecuador|espa[nñ]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[aá]|costa
-    rica|estados unidos|united states
+  excluir: "aprendiz|practicant|pasant|auxiliar(?! de extensi)|operari|ayudante|tecn[o\xF3\
+    ]log|t[e\xE9]cnico(?!.?comercial)|docente|profesor|conductor|cocin|meser|jardiner|vigilan|cajer|impuls|bodega|almacen|\\\
+    bflor(es|icultura|icultor)?\\b|\\brosas?\\b|\\bclavel|crisantemo|pomp[o\xF3]n|mipe|junior|egresad|sin\
+    \ experiencia|la palma\\b|seguridad|siso|\\bsst\\b|motorizad|seguros|operador|mirfe|veterinari|zootecn|argentina|sistemas|software|\\\
+    bseo\\b|abogad|contador|contabil|tesorer|recursos humanos|talento humano|reclutad|chef|ferreter|supervisor\
+    \ de personal|promotor|mallas|molienda"
+  incluir: "agr[o\xF3]n|agr[i\xED]col|agropec|agroindus|agroinsum|agroqu|finca|plantaci|palm(?!ira)|arroz|semilla|fertiliz|extensi|cultiv|cosecha|rural|riego|fitosan|t[e\xE9\
+    ]cnico.?comercial|representante t[e\xE9]cn|asesor t[e\xE9]cn|maquinaria agr|cenipalma|fedepalma|fedearroz|agrosavia|hacienda|agricultur|\\\
+    bdron|ensayos? (de campo|agr)|\\btrials?\\b|investigaci[o\xF3]n agr|ganader"
+  excluir_ubicacion: "argentina|buenos aires|c[o\xF3]rdoba, arg|mendoza|santa fe,\
+    \ arg|per[u\xFA]\\b|lima, per|chile|m[e\xE9]xico|ecuador|espa[n\xF1]a|venezuela|bolivia|paraguay|uruguay|guatemala|panam[a\xE1\
+    ]|costa rica|estados unidos|united states"
   excluir_empresa: ofertasynegocios|novalfarm|simpalm|elite flower|supernumerarios
-  excluir_cargo_empresa: abogad|analista de laboratorio|contab|compras|jur[ií]dic
+  excluir_cargo_empresa: "abogad|analista de laboratorio|contab|compras|jur[i\xED\
+    ]dic"
 general:
   purgar_vistos_dias: 45
   dias_pagina: 7
@@ -87,17 +91,17 @@ fuentes:
     pausa: 1.5
     paginas_max: 10
     terminos_colombia:
-    - agrónomo
-    - ingeniero agrónomo
-    - agrícola
+    - "agr\xF3nomo"
+    - "ingeniero agr\xF3nomo"
+    - "agr\xEDcola"
     - administrador agropecuario
     - administrador de finca
-    - asesor técnico comercial
-    - representante técnico comercial
-    - coordinador agronómico
-    - coordinador de producción agrícola
-    - jefe de producción agrícola
-    - director agrícola
+    - "asesor t\xE9cnico comercial"
+    - "representante t\xE9cnico comercial"
+    - "coordinador agron\xF3mico"
+    - "coordinador de producci\xF3n agr\xEDcola"
+    - "jefe de producci\xF3n agr\xEDcola"
+    - "director agr\xEDcola"
     - extensionista
     - palma
     - arroz
@@ -105,8 +109,8 @@ fuentes:
     - semillas
     - fertilizantes
     terminos_region:
-    - agrónomo
-    - agrícola
+    - "agr\xF3nomo"
+    - "agr\xEDcola"
     regiones:
     - Casanare, Colombia
     - Meta, Colombia
@@ -159,3 +163,25 @@ fuentes:
     rutas:
     - /trabajo-ingeniero-agronomo
     - /trabajo-administrador-agropecuario
+  agrohunters:
+    activa: true
+  adama:
+    activa: true
+  syngenta:
+    activa: true
+  yara:
+    activa: true
+  riopaila:
+    activa: true
+  manuelita:
+    activa: true
+  fedepalma:
+    activa: true
+  agrosavia:
+    activa: true
+  fao_un:
+    activa: true
+  magneto:
+    activa: true
+  elempleo_empresa:
+    activa: true
