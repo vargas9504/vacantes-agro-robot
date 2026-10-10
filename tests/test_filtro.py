@@ -77,10 +77,10 @@ def test_deduplicar_por_id_y_cargo_empresa():
 
 
 def test_dedup_titulo_que_extiende_a_otro():
-    items = [_v("kitempleo-1", "Analista de Inteligencia de Negocios Agropecuario (Bogotá)", "Adecco Colombia S A"),
+    items = [_v("kitempleo-1", "Analista de Inteligencia de Negocios Agropecuario (Bogotá)", "Acme Corp"),
              _v("kitempleo-2", "Analista de Inteligencia de Negocios Agropecuario Analista Estratégico (Bogotá)",
-                "Adecco Colombia S A"),
-             _v("kitempleo-3", "Analista de Inteligencia de Negocios Agropecuario", "Otra empresa")]
+                "Acme Corp"),
+             _v("kitempleo-3", "Analista de Inteligencia de Negocios Agropecuario", "Empresa 2")]
     assert [v["id"] for v in b.deduplicar(items)] == ["kitempleo-1", "kitempleo-3"]
 
 

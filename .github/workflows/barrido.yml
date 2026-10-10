@@ -44,6 +44,7 @@ jobs:
       - id: hoy
         run: |
           hoy=$(TZ=America/Bogota date +%Y-%m-%d)
+          hora=$(TZ=America/Bogota date +%H)
           ultima=$(python3 -c "import json;print(json.load(open('data/estado.json')).get('ultima_corrida',''))" 2>/dev/null || true)
           automatica=false
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.automatico }}" = "true" ]; then automatica=true; fi
@@ -51,6 +52,11 @@ jobs:
             echo "Ya hubo corrida hoy ($ultima): esta llamada automática no hace nada."
             echo "correr=false" >> "$GITHUB_OUTPUT"
           else
+            if [ "$automatica" = "true" ] && [ "${ultima:0:10}" != "$hoy" ] && [ "$hora" = "08" ]; then
+              echo "Alerta: cron-job.org falló (¿token vencido?). Esta es la corrida de respaldo." > data/alerta.txt
+            else
+              rm -f data/alerta.txt
+            fi
             echo "Última corrida: ${ultima:-ninguna}. Corro."
             echo "correr=true" >> "$GITHUB_OUTPUT"
           fi
