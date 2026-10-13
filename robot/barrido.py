@@ -832,7 +832,31 @@ def parse_magneto(html_txt: str, busqueda: str) -> list[dict]:
         card = a.find_parent("div", class_=re.compile(r"card|item|job|border")) or a.parent
         card_txt = texto(card)
 
-        emp = "Comfama"
+        # Extraer empresa de la tarjeta: patrón "Empresa | salario | ciudad"
+        emp = ""
+        candidatos = []
+        for el in card.find_all(True):
+            if el != card and el != a and "|" in el.get_text():
+                candidatos.append(el)
+        if candidatos:
+            el_pipe = min(candidatos, key=lambda e: len(texto(e)))
+            emp = texto(el_pipe).split("|")[0].strip()
+        elif "|" in card_txt:
+            txt_resto = card_txt
+            if cargo and txt_resto.startswith(cargo):
+                txt_resto = txt_resto[len(cargo):].strip()
+            elif cargo and cargo in txt_resto:
+                txt_resto = txt_resto.replace(cargo, "", 1).strip()
+            if "|" in txt_resto:
+                emp = txt_resto.split("|")[0].strip()
+
+        if cargo and emp.startswith(cargo):
+            emp = emp[len(cargo):].strip()
+        emp = limpiar(emp.strip(" -|:\t\r\n"))
+        if normalizar(emp) == "servicio de empleo comfama":
+            emp = "Comfama"
+        if not emp:
+            emp = "Magneto (empresa no indicada)"
         sal = _salario(card_txt)
         ciu = _ciudad_colombia(card_txt)
         out.append(_item(oid, cargo, url, busqueda, empresa=emp, ciudad=ciu, salario=sal, tarjeta=card_txt))
@@ -920,7 +944,7 @@ def parse_fao_un(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
 
         # Filtrar por palabras agro, forestal y pecuario van aparte
         full_txt = f"{cargo} {card_txt}"
-        rx_fao_agro = r"\b(agr[oó]|agr[ií]col|forestal|pecuari|aliment|suelo|riego|rural|fao)\b"
+        rx_fao_agro = r"\b(agr[oó]|agr[ií]col|forestal|pecuari|aliment|suelo|riego|rural)"
         if not re.search(rx_fao_agro, full_txt, re.I):
             continue
 

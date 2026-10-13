@@ -191,6 +191,34 @@ def test_parse_magneto():
     assert items[0]["salario"] == "$ 5.500.000"
 
 
+def test_parse_magneto_otra_empresa():
+    html = '''
+    <div class="card">
+        <a href="/co/empleos/ingenieroa-agronomoa-1626506756-12-1015105">Ingeniero/a Agrónomo/a</a>
+        <p>Ducol Group SAS | $ 4.000.000 | Medellín</p>
+    </div>
+    '''
+    items = b.parse_magneto(html, "agronomo")
+    assert len(items) == 1
+    assert items[0]["id_local"] == "1015105"
+    assert items[0]["cargo"] == "Ingeniero/a Agrónomo/a"
+    assert items[0]["empresa"] == "Ducol Group SAS"
+    assert items[0]["empresa"] != "Comfama"
+    assert items[0]["salario"] == "$ 4.000.000"
+
+
+def test_parse_magneto_empresa_no_indicada():
+    html = '''
+    <div class="card">
+        <a href="/co/empleos/ingenieroa-agronomoa-1626506756-12-1015106">Ingeniero/a Agrónomo/a</a>
+        <p>Medellín, Antioquia</p>
+    </div>
+    '''
+    items = b.parse_magneto(html, "agronomo")
+    assert len(items) == 1
+    assert items[0]["empresa"] == "Magneto (empresa no indicada)"
+
+
 def test_parse_fao_un():
     html = '''
     <div class="views-row">
@@ -212,6 +240,42 @@ def test_parse_fao_un():
     assert items[0]["cargo"] == "Profesional misional en producción agrícola"
     assert items[0]["empresa"] == "FAO"
     assert items[0]["_cierre_texto"] == "16 octubre 2026"
+
+
+def test_parse_fao_un_descarte_fao_no_agro():
+    html = '''
+    <div class="views-row">
+        <span>01 octubre 2026</span>
+        <a href="https://fao.taleo.net/careersection/fao_external/jobdetail.ftl?job=2602088">Profesional especializado en Power Platform y Analítica de Datos</a>
+        <span>Fecha de cierre | 18 octubre 2026</span>
+        <span>FAO: Food and Agriculture Organization</span>
+    </div>
+    <div class="views-row">
+        <span>02 octubre 2026</span>
+        <a href="https://fao.taleo.net/careersection/fao_external/jobdetail.ftl?job=2602062">Profesional misional en producción agrícola</a>
+        <span>Fecha de cierre | 16 octubre 2026</span>
+        <span>FAO: Food and Agriculture Organization</span>
+    </div>
+    '''
+    items = b.parse_fao_un(html)
+    # Oferta TI de FAO descartada; oferta agro pasa
+    assert len(items) == 1
+    assert items[0]["id_local"] == "2602062"
+    assert items[0]["cargo"] == "Profesional misional en producción agrícola"
+    assert items[0]["empresa"] == "FAO"
+    assert not any("Power Platform" in it["cargo"] for it in items)
+
+
+def test_parse_fao_un_empresa_onu():
+    html = '''
+    <div class="views-row">
+        <a href="https://colombia.un.org/es/jobs/12345">Especialista en Desarrollo Rural Sostenible</a>
+        <span>Naciones Unidas Colombia</span>
+    </div>
+    '''
+    items = b.parse_fao_un(html)
+    assert len(items) == 1
+    assert items[0]["empresa"] == "ONU Colombia"
 
 
 def test_parse_fedepalma():
