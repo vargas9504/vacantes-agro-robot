@@ -165,23 +165,50 @@ fuentes:
     - /trabajo-administrador-agropecuario
   agrohunters:
     activa: true
+    url: https://agrohunters.com/ofertas-laborales/
   adama:
     activa: true
-  syngenta:
-    activa: true
-  yara:
-    activa: true
-  riopaila:
-    activa: true
-  manuelita:
-    activa: true
-  fedepalma:
-    activa: true
-  agrosavia:
-    activa: true
-  fao_un:
-    activa: true
+    url: https://careers.adama.com/search/?q=&locationsearch=Colombia&sortColumn=referencedate&sortDirection=desc
   magneto:
     activa: true
+    rutas:
+    - /co/trabajos/ofertas-empleo-de-ingeniero-agronomo
+    - /co/trabajos/ofertas-empleo-de-administrador-agropecuario
+    - /co/trabajos/ofertas-empleo-de-asesor-tecnico-comercial
   elempleo_empresa:
     activa: true
+    slugs:
+    - acepalma
+    - palmar-del-oriente
+    - grupo-diana
+    - disan-colombia-sas
+    - interoc-sa-sucursal-colombia
+    - federacion-nacional-cafeteros-colombia
+    rutas_extra:
+    - /co/empleos-empresas/fedearroz/5028
+  fao_un:
+    activa: true
+    url: https://colombia.un.org/es/jobs
+  fedepalma:
+    activa: true
+    url: https://fedepalma.org/trabaje-con-nosotros/
+  agrosavia:
+    activa: true
+    url: https://talento.agrosavia.co/search/
+  syngenta:
+    activa: true
+    url: https://jobs.syngenta.com/api/jobs?country=CO
+  yara:
+    activa: true
+    url: https://jobs.yara.com/search/?q=&locationsearch=Colombia
+  riopaila:
+    activa: true
+    url: https://trabaja-con-nosotros.riopaila-castilla.com/search/?q=&sortColumn=referencedate&sortDirection=desc
+  manuelita:
+    activa: true
+    subdominios:
+    - grupomanuelita
+    - manuelitaazucaryenergia
+    - manuelitaaceitesyenergia
+    - manuelitafrutasyhortalizas
+

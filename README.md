@@ -46,8 +46,19 @@ Campos de cada candidata: `id` (`<portal>-<id>`), `portal`, `cargo`, `empresa`, 
 | LinkedIn | ✅ | API de invitados, ~180 llamadas, ~4,5 min |
 | KitEmpleo | ✅ | Muchos repetidos: se deduplica por cargo+empresa (quitando "(Ciudad)") |
 | Pandapé (Cenipalma, Poligrow) | ✅ | Incluye "Ver 20 ofertas más" (`POST /ListVacancies`) |
+| Jooble | ✅ | API oficial con `JOOBLE_API_KEY` |
+| Agrohunters | ✅ | Filtra flores y nutrición animal; series 28xx Colombia |
+| Magneto | ✅ | Convocatorias Comfama Antioquia para agrónomos y técnicos comerciales |
+| elempleo (por empresa) | ✅ | 6 empresas clave (Acepalma, Diana, Disan, etc.) + Fedearroz |
+| FAO / UN | ✅ | Convocatorias de la FAO y ONU Colombia filtradas por perfil agro |
+| Fedepalma | ✅ | Convocatorias y vacantes en carrusel de Fedepalma |
+| Agrosavia | ✅ | Portal de empleo de Agrosavia |
+| Syngenta | ✅ | API oficial de Syngenta Colombia |
+| Yara | ✅ | Portal oficial de vacantes de Yara Colombia |
+| Riopaila | ✅ | Portal oficial de Riopaila Castilla |
+| Manuelita | ✅ | 4 subdominios Teamtailor de Manuelita |
+| ADAMA | ⚠️ / ❌ | Careers ADAMA (bloqueo Radware 247 en IPs no autorizadas) |
 | Indeed | ❌ bloqueado | Responde 403 "Security Check" a las IPs de GitHub; queda como `bloqueado` |
-| Jooble | ❌ bloqueado | Cloudflare "Just a moment..." (403); queda como `bloqueado` |
 
 ## Para el agente de IA
 

@@ -87,7 +87,8 @@ def clave_vacante(cargo: str, empresa: str, ciudad: str = "", salario: str = "")
     e = re.sub(r"\s+", " ", _SUFIJOS_EMPRESA.sub(" ", e)).strip()
     
     agencias = ["manpower", "adecco", "acierta", "michael page", "zohorecruit", "gente util", "supernumerarios", "human one"]
-    if e in _EMPRESA_VACIA or "confidencial" in e or "reconocida empresa" in e or "importante empresa" in e or "otra empresa" in e or e == "elempleo" or any(ag in e for ag in agencias):
+    portales = ["elempleo", "kitempleo", "kit empleo", "jobleads"]
+    if e in _EMPRESA_VACIA or "confidencial" in e or "reconocida empresa" in e or "importante empresa" in e or "otra empresa" in e or any(p in e for p in portales) or any(ag in e for ag in agencias):
         e = "?"
         
     k = f"{c}|{e}@{ciudad_base(ciudad)}"
@@ -253,7 +254,7 @@ class Http:
                 if intento < intentos:
                     time.sleep(2 * 2 ** intento)
                     continue
-            if r.status_code in (401, 403) or self._es_captcha(r):
+            if r.status_code in (401, 403, 247) or self._es_captcha(r):
                 raise Bloqueado(f"HTTP {r.status_code} / captcha en {dominio}")
             r.raise_for_status()
             return r
@@ -271,7 +272,7 @@ class Http:
         cab = r.text[:6000].lower()
         return any(s in cab for s in ("cf-challenge", "challenge-platform", "hcaptcha", "g-recaptcha",
                                        "verify you are human", "just a moment...", "px-captcha",
-                                       "request blocked", "access denied"))
+                                       "request blocked", "access denied", "rbzns", "kramericaindustries", "radware"))
 
     def _snapshot(self, url: str, r: requests.Response):
         if not self.snapshots or self.n_snap >= 4:
@@ -687,33 +688,514 @@ def fuente_pandape(ctx) -> list[dict]:
 def parse_jooble(html_txt: str, busqueda: str) -> list[dict]:
     return []
 
+
 def fuente_jooble(ctx) -> list[dict]:
     cfg, http = ctx["cfg"], ctx["http"]
     items = []
     api_key = os.environ.get("JOOBLE_API_KEY")
     if not api_key:
-        raise ValueError("Falta JOOBLE_API_KEY en variables de entorno (bloqueado)")
+        raise Bloqueado("Falta JOOBLE_API_KEY en variables de entorno (bloqueado)")
     for ruta in cfg.get("rutas", []):
         keyword = ruta.replace("/trabajo-", "").replace("-", " ")
         r = http.post(f"https://jooble.org/api/{api_key}", json={"keywords": keyword, "location": "Colombia"}, intentos=2, intentos_429=1)
         if r.status_code != 200:
+            if r.status_code in (401, 403):
+                raise Bloqueado(f"Jooble API HTTP {r.status_code} (key inválida o bloqueada)")
             raise ValueError(f"Jooble API HTTP {r.status_code}")
         for j in r.json().get("jobs", []):
-            items.append({
-                "fuente_busqueda": ruta.strip("/"),
-                "id_local": str(j.get("id")),
-                "url": j.get("link"),
-                "cargo": limpiar(j.get("title", "")),
-                "empresa": limpiar(j.get("company", "")),
-                "ciudad": limpiar(j.get("location", "")),
-                "salario": limpiar(j.get("salary", "")),
-                "publicada": j.get("updated", "")
-            })
+            items.append(_item(
+                j.get("id"),
+                j.get("title", ""),
+                j.get("link", ""),
+                ruta.strip("/"),
+                empresa=j.get("company", ""),
+                ciudad=j.get("location", ""),
+                publicada=j.get("updated", ""),
+                salario=j.get("salary", ""),
+                tarjeta=j.get("snippet", "")
+            ))
     return items
 
 
-def fuente_generica(ctx):
-    raise ValueError("Fuente requiere implementacion del parser")
+# ---- H. Agrohunters
+
+def parse_agrohunters(html_txt: str, busqueda: str = "ofertas-laborales") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_id = re.compile(r"codigo-(\d+)", re.I)
+    for a in sopa.find_all("a", href=patron_id):
+        href = a.get("href", "")
+        m = patron_id.search(href)
+        if not m:
+            continue
+        oid = m[1]
+        if oid in vistos:
+            continue
+        vistos.add(oid)
+
+        # Series: 28xx = agro Colombia, 5xxx = nutrición animal (no), 80xx = exterior (no)
+        if oid.startswith("5") or oid.startswith("80"):
+            continue
+
+        card = a.find_parent("article") or a.find_parent("div", class_=re.compile(r"post|item|card|entry")) or a.parent
+        card_txt = texto(card)
+        h = card.find(["h2", "h3", "h4"]) if card else None
+        cargo = texto(h) if h else (texto(a) or card_txt.split(" - ")[0])
+        cargo = re.sub(r"-\s*C[oó]digo\s*\d+.*$", "", cargo, flags=re.I).strip()
+
+        # Descartar flores (2839, 2840...) y nutricion animal
+        if oid in ("2839", "2840") or re.search(r"\b(flores?|rosas?|claveles?|crisantemo|pomp[oó]n|nutrici[oó]n animal)\b", f"{cargo} {card_txt}", re.I):
+            continue
+
+        ciu = _ciudad_colombia(card_txt)
+        out.append(_item(oid, cargo, href, busqueda, empresa="Agrohunters", ciudad=ciu, tarjeta=card_txt))
+    return out
+
+
+def fuente_agrohunters(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://agrohunters.com/ofertas-laborales/")
+    r = http.get(url)
+    return parse_agrohunters(r.text)
+
+
+# ---- I. ADAMA
+
+def parse_adama(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_job = re.compile(r"/job/([^/?#]+)/(\d+)", re.I)
+
+    for row in sopa.select("tr.data-row, li.job-tile, .searchResults tr"):
+        a = row.select_one("a.jobTitle-link, a[href*='/job/']")
+        if not a:
+            continue
+        href = a.get("href", "")
+        m = patron_job.search(href)
+        oid = m[2] if m else None
+        if not oid:
+            m_alt = re.search(r"(\d{5,})", href)
+            oid = m_alt[1] if m_alt else ""
+        if not oid or oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        url = urljoin("https://careers.adama.com", href)
+        loc = row.select_one(".jobLocation, [class*=location]")
+        ciu = texto(loc) or _ciudad_colombia(texto(row)) or "Colombia"
+        date_el = row.select_one(".jobDate, [class*=date]")
+        pub = texto(date_el)
+        out.append(_item(oid, cargo, url, busqueda, empresa="ADAMA", ciudad=ciu, publicada=pub, tarjeta=texto(row)))
+
+    if not out:
+        for a in sopa.find_all("a", href=patron_job):
+            href = a.get("href", "")
+            m = patron_job.search(href)
+            oid = m[2]
+            if oid in vistos:
+                continue
+            vistos.add(oid)
+            cargo = texto(a)
+            url = urljoin("https://careers.adama.com", href)
+            out.append(_item(oid, cargo, url, busqueda, empresa="ADAMA", ciudad="Colombia", tarjeta=cargo))
+    return out
+
+
+def fuente_adama(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://careers.adama.com/search/?q=&locationsearch=Colombia&sortColumn=referencedate&sortDirection=desc")
+    r = http.get(url)
+    return parse_adama(r.text)
+
+
+# ---- J. Magneto
+
+def parse_magneto(html_txt: str, busqueda: str) -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron = re.compile(r"/co/empleos/[^/]+-(\d+)")
+    for a in sopa.find_all("a", href=patron):
+        href = a.get("href", "")
+        m = patron.search(href)
+        if not m:
+            continue
+        oid = m[1]
+        if oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        if not cargo:
+            continue
+        url = urljoin("https://www.magneto365.com", href)
+        card = a.find_parent("div", class_=re.compile(r"card|item|job|border")) or a.parent
+        card_txt = texto(card)
+
+        emp = "Comfama"
+        sal = _salario(card_txt)
+        ciu = _ciudad_colombia(card_txt)
+        out.append(_item(oid, cargo, url, busqueda, empresa=emp, ciudad=ciu, salario=sal, tarjeta=card_txt))
+    return out
+
+
+def fuente_magneto(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    rutas = cfg.get("rutas", [
+        "/co/trabajos/ofertas-empleo-de-ingeniero-agronomo",
+        "/co/trabajos/ofertas-empleo-de-administrador-agropecuario",
+        "/co/trabajos/ofertas-empleo-de-asesor-tecnico-comercial"
+    ])
+    items = []
+    for r_path in rutas:
+        url = urljoin("https://www.magneto365.com", r_path)
+        try:
+            r = http.get(url)
+            items += parse_magneto(r.text, r_path.split("/")[-1])
+        except Bloqueado:
+            raise
+        except Exception as e:
+            _aviso(ctx, f"{url}: {e}")
+            continue
+    return items
+
+
+# ---- K. elempleo_empresa
+
+def fuente_elempleo_empresa(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    slugs = cfg.get("slugs", [
+        "acepalma", "palmar-del-oriente", "grupo-diana", "disan-colombia-sas",
+        "interoc-sa-sucursal-colombia", "federacion-nacional-cafeteros-colombia"
+    ])
+    rutas_extra = cfg.get("rutas_extra", ["/co/empleos-empresas/fedearroz/5028"])
+    items = []
+    for slug in slugs:
+        url = f"https://www.elempleo.com/co/ofertas-empleo/{slug}"
+        try:
+            r = http.get(url)
+            items += parse_elempleo(r.text, slug)
+        except Bloqueado:
+            raise
+        except Exception as e:
+            _aviso(ctx, f"{url}: {e}")
+            continue
+    for ruta in rutas_extra:
+        url = urljoin("https://www.elempleo.com", ruta)
+        try:
+            r = http.get(url)
+            items += parse_elempleo(r.text, ruta.split("/")[-2] if "/" in ruta else ruta)
+        except Bloqueado:
+            raise
+        except Exception as e:
+            _aviso(ctx, f"{url}: {e}")
+            continue
+    return items
+
+
+# ---- L. FAO / UN
+
+def parse_fao_un(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_link = re.compile(r"fao\.taleo\.net|colombia\.un\.org/.*jobs|unsdg\.un\.org/jobs|jobdetail", re.I)
+    patron_job_id = re.compile(r"job=(\d+)|/jobs/(\d+)", re.I)
+
+    for a in sopa.find_all("a", href=patron_link):
+        href = a.get("href", "")
+        m = patron_job_id.search(href)
+        if not m:
+            continue
+        oid = m[1] or m[2]
+        if oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        if not cargo:
+            continue
+
+        card = a.find_parent("div", class_=re.compile(r"views-row|node|card|item")) or a.parent
+        card_txt = texto(card)
+
+        # Filtrar por palabras agro, forestal y pecuario van aparte
+        full_txt = f"{cargo} {card_txt}"
+        rx_fao_agro = r"\b(agr[oó]|agr[ií]col|forestal|pecuari|aliment|suelo|riego|rural|fao)\b"
+        if not re.search(rx_fao_agro, full_txt, re.I):
+            continue
+
+        emp = "FAO" if "fao" in href.lower() or "fao" in full_txt.lower() else "ONU Colombia"
+        ciu = _ciudad_colombia(card_txt) or "Colombia"
+
+        m_pub = re.search(r"(\d{1,2}\s+[a-z]{3,}\s+\d{4})", card_txt, re.I)
+        pub = m_pub[1] if m_pub else ""
+
+        cierre = ""
+        m_cie = re.search(r"cierre\s*\|?\s*(\d{1,2}\s+[a-z]{3,}\s+\d{4})", card_txt, re.I)
+        if m_cie:
+            cierre = m_cie[1]
+
+        item = _item(oid, cargo, href, busqueda, empresa=emp, ciudad=ciu, publicada=pub, tarjeta=card_txt)
+        if cierre:
+            item["_cierre_texto"] = cierre
+        out.append(item)
+    return out
+
+
+def fuente_fao_un(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://colombia.un.org/es/jobs")
+    r = http.get(url)
+    return parse_fao_un(r.text)
+
+
+# ---- M. Fedepalma
+
+def parse_fedepalma(html_txt: str, busqueda: str = "Fedepalma") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    slides = sopa.select(".contSlideVacante, .vancante")
+    for s in slides:
+        full = texto(s)
+        h = s.find(["h2", "h3", "h4", "p", "div"])
+        title = texto(h) if h else ""
+        if not title or len(title) < 5 or title.lower().startswith("post") or title.lower().startswith("excelentes"):
+            parts = [p.strip() for p in s.get_text(separator="\n", strip=True).splitlines() if p.strip()]
+            title = parts[0] if parts else ""
+        if not title:
+            continue
+
+        img_a = s.find("a", href=lambda h: h and any(ext in h.lower() for ext in [".jpg", ".png", ".jpeg", ".webp", ".pdf"]))
+        if img_a and img_a.get("href"):
+            href = img_a["href"]
+            oid = re.sub(r"\.[^.]+$", "", href.split("/")[-1])
+        else:
+            oid = re.sub(r"[^a-z0-9]+", "-", normalizar(title))
+
+        if oid in vistos:
+            continue
+        vistos.add(oid)
+
+        url = img_a["href"] if img_a else "https://fedepalma.org/trabaje-con-nosotros/"
+        ciu = _ciudad_colombia(full) or "Colombia"
+        if not ciu or ciu == "Colombia":
+            if "zona oriental" in full.lower():
+                ciu = "Zona Oriental"
+            elif "zona norte" in full.lower():
+                ciu = "Zona Norte"
+
+        m_cie = re.search(r"post[uú]late antes del\s*(\d{1,2}\s+(?:de\s+)?[a-z]{3,}\s+\d{4})", full, re.I)
+        cierre = m_cie[1] if m_cie else ""
+
+        item = _item(oid, title, url, busqueda, empresa="Fedepalma", ciudad=ciu, tarjeta=full)
+        if cierre:
+            item["_cierre_texto"] = cierre
+        out.append(item)
+    return out
+
+
+def fuente_fedepalma(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://fedepalma.org/trabaje-con-nosotros/")
+    r = http.get(url)
+    return parse_fedepalma(r.text)
+
+
+# ---- N. Agrosavia
+
+def parse_agrosavia(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_job = re.compile(r"/job/([^/?#]+)/(\d+)", re.I)
+
+    for row in sopa.select("tr.data-row, li.job-tile, .searchResults tr"):
+        a = row.select_one("a.jobTitle-link, a[href*='/job/']")
+        if not a:
+            continue
+        href = a.get("href", "")
+        m = patron_job.search(href)
+        oid = m[2] if m else None
+        if not oid:
+            m_alt = re.search(r"(\d{5,})", href)
+            oid = m_alt[1] if m_alt else ""
+        if not oid or oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        url = urljoin("https://talento.agrosavia.co", href)
+        loc = row.select_one(".jobLocation, [class*=location]")
+        ciu = texto(loc) or _ciudad_colombia(texto(row)) or "Colombia"
+        date_el = row.select_one(".jobDate, [class*=date]")
+        pub = texto(date_el)
+        out.append(_item(oid, cargo, url, busqueda, empresa="Agrosavia", ciudad=ciu, publicada=pub, tarjeta=texto(row)))
+    return out
+
+
+def fuente_agrosavia(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://talento.agrosavia.co/search/")
+    r = http.get(url)
+    return parse_agrosavia(r.text)
+
+
+# ---- O. Syngenta
+
+def parse_syngenta(data: dict | list, busqueda: str = "Colombia") -> list[dict]:
+    out = []
+    jobs = data.get("jobs", []) if isinstance(data, dict) else data
+    for j in jobs:
+        jid = str(j.get("id", ""))
+        if not jid:
+            continue
+        cargo = limpiar(j.get("title", ""))
+        url = j.get("url") or j.get("local_url") or f"https://jobs.syngenta.com/job/{jid}"
+        ciu = limpiar(j.get("city") or j.get("location") or "Colombia")
+        pub = limpiar(j.get("published", ""))
+        sal = limpiar(j.get("compensation", ""))
+        full = f"{cargo} {j.get('department', '')} {j.get('function', '')} {j.get('job_type', '')}"
+        out.append(_item(jid, cargo, url, busqueda, empresa="Syngenta", ciudad=ciu, publicada=pub, salario=sal, tarjeta=full))
+    return out
+
+
+def fuente_syngenta(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://jobs.syngenta.com/api/jobs?country=CO")
+    r = http.get(url)
+    return parse_syngenta(r.json())
+
+
+# ---- P. Yara
+
+def parse_yara(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_job = re.compile(r"/job/([^/?#]+)/(\d+)", re.I)
+
+    for row in sopa.select("tr.data-row, li.job-tile, .searchResults tr"):
+        a = row.select_one("a.jobTitle-link, a[href*='/job/']")
+        if not a:
+            continue
+        href = a.get("href", "")
+        m = patron_job.search(href)
+        oid = m[2] if m else None
+        if not oid:
+            m_alt = re.search(r"(\d{5,})", href)
+            oid = m_alt[1] if m_alt else ""
+        if not oid or oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        url = urljoin("https://jobs.yara.com", href)
+        loc = row.select_one(".jobLocation, [class*=location]")
+        ciu = texto(loc) or _ciudad_colombia(texto(row)) or "Colombia"
+        date_el = row.select_one(".jobDate, [class*=date]")
+        pub = texto(date_el)
+        out.append(_item(oid, cargo, url, busqueda, empresa="Yara", ciudad=ciu, publicada=pub, tarjeta=texto(row)))
+    return out
+
+
+def fuente_yara(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://jobs.yara.com/search/?q=&locationsearch=Colombia")
+    r = http.get(url)
+    return parse_yara(r.text)
+
+
+# ---- Q. Riopaila
+
+def parse_riopaila(html_txt: str, busqueda: str = "Colombia") -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron_job = re.compile(r"/job/([^/?#]+)/(\d+)", re.I)
+
+    for row in sopa.select("li.job-tile, tr.data-row, .searchResults tr"):
+        a = row.select_one("a.jobTitle-link, a[href*='/job/']")
+        if not a:
+            continue
+        href = a.get("href", "")
+        m = patron_job.search(href)
+        oid = m[2] if m else None
+        if not oid:
+            for cls in row.get("class", []):
+                if cls.startswith("job-id-"):
+                    oid = cls.replace("job-id-", "")
+                    break
+        if not oid or oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        url = urljoin("https://trabaja-con-nosotros.riopaila-castilla.com", href)
+        loc = row.select_one(".jobLocation, [class*=location]")
+        ciu = texto(loc) or _ciudad_colombia(texto(row)) or "Valle del Cauca"
+        date_el = row.select_one(".jobDate, [class*=date], .date")
+        pub = texto(date_el)
+        if not pub:
+            m_f = re.search(r"Fecha\s*\|\s*(\d{1,2}\s+[a-z]{3}\s+\d{4})", texto(row), re.I)
+            if m_f:
+                pub = m_f[1]
+        out.append(_item(oid, cargo, url, busqueda, empresa="Riopaila Castilla", ciudad=ciu, publicada=pub, tarjeta=texto(row)))
+    return out
+
+
+def fuente_riopaila(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    url = cfg.get("url", "https://trabaja-con-nosotros.riopaila-castilla.com/search/?q=&sortColumn=referencedate&sortDirection=desc")
+    r = http.get(url)
+    return parse_riopaila(r.text)
+
+
+# ---- R. Manuelita
+
+def parse_manuelita(html_txt: str, base_url: str, busqueda: str) -> list[dict]:
+    sopa = BeautifulSoup(html_txt, "html.parser")
+    out, vistos = [], set()
+    patron = re.compile(r"/jobs/(\d+)-([a-z0-9-]+)", re.I)
+    for a in sopa.find_all("a", href=patron):
+        href = a.get("href", "")
+        m = patron.search(href)
+        if not m:
+            continue
+        oid = m[1]
+        if oid in vistos:
+            continue
+        vistos.add(oid)
+
+        cargo = texto(a)
+        if not cargo:
+            continue
+
+        url = urljoin(base_url, href)
+        li = a.find_parent("li") or a.parent
+        li_txt = texto(li)
+        ciu = _ciudad_colombia(li_txt) or "Colombia"
+        out.append(_item(oid, cargo, url, busqueda, empresa="Manuelita", ciudad=ciu, tarjeta=li_txt))
+    return out
+
+
+def fuente_manuelita(ctx) -> list[dict]:
+    cfg, http = ctx["cfg"], ctx["http"]
+    subdominios = cfg.get("subdominios", [
+        "grupomanuelita",
+        "manuelitaazucaryenergia",
+        "manuelitaaceitesyenergia",
+        "manuelitafrutasyhortalizas"
+    ])
+    items = []
+    for sub in subdominios:
+        url = f"https://{sub}.na.teamtailor.com/jobs"
+        try:
+            r = http.get(url)
+            items += parse_manuelita(r.text, url, sub)
+        except Bloqueado:
+            raise
+        except Exception as e:
+            _aviso(ctx, f"{url}: {e}")
+            continue
+    return items
+
 
 # Orden = prioridad al deduplicar por cargo+empresa (la primera fuente gana).
 FUENTES = {
@@ -722,19 +1204,19 @@ FUENTES = {
     "elempleo": {"listar": fuente_elempleo, "detalle": detalle_elempleo},
     "linkedin": {"listar": fuente_linkedin},
     "indeed": {"listar": fuente_indeed},
-    "jooble": {"listar": fuente_jooble},
+    "jooble": {"listar": fuente_jooble, "permitir_vacio": True},
     "kitempleo": {"listar": fuente_kitempleo, "detalle": detalle_kitempleo},
-    "agrohunters": {"listar": fuente_generica},
-    "adama": {"listar": fuente_generica},
-    "syngenta": {"listar": fuente_generica},
-    "yara": {"listar": fuente_generica},
-    "riopaila": {"listar": fuente_generica},
-    "manuelita": {"listar": fuente_generica},
-    "fedepalma": {"listar": fuente_generica},
-    "agrosavia": {"listar": fuente_generica},
-    "fao_un": {"listar": fuente_generica},
-    "magneto": {"listar": fuente_generica},
-    "elempleo_empresa": {"listar": fuente_generica},
+    "agrohunters": {"listar": fuente_agrohunters, "permitir_vacio": True},
+    "adama": {"listar": fuente_adama, "permitir_vacio": True},
+    "magneto": {"listar": fuente_magneto, "permitir_vacio": True},
+    "elempleo_empresa": {"listar": fuente_elempleo_empresa, "permitir_vacio": True},
+    "fao_un": {"listar": fuente_fao_un, "permitir_vacio": True},
+    "fedepalma": {"listar": fuente_fedepalma, "permitir_vacio": True},
+    "agrosavia": {"listar": fuente_agrosavia, "permitir_vacio": True},
+    "syngenta": {"listar": fuente_syngenta, "permitir_vacio": True},
+    "yara": {"listar": fuente_yara, "permitir_vacio": True},
+    "riopaila": {"listar": fuente_riopaila, "permitir_vacio": True},
+    "manuelita": {"listar": fuente_manuelita, "permitir_vacio": True},
 }
 
 
@@ -852,7 +1334,7 @@ def correr_fuente(nombre: str, cfg: dict, gen: dict, snapshots: Path | None) -> 
     res = {"nombre": nombre, "ctx": ctx, "listados": [], "estado": "ok", "error": ""}
     try:
         res["listados"] = FUENTES[nombre]["listar"](ctx)
-        if not res["listados"]:
+        if not res["listados"] and not FUENTES[nombre].get("permitir_vacio", False):
             res["estado"] = "vacio"
             res["error"] = "0 listados leídos (¿cambió el HTML?)"
     except Bloqueado as e:
@@ -996,7 +1478,7 @@ def main(argv=None) -> int:
             e_lo = normalizar(it.get("empresa", ""))
             it["empresa_confidencial"] = (e_lo in _EMPRESA_VACIA or "confidencial" in e_lo)
             it["repost_probable"] = (k in claves_historicas)
-            it["via_descripcion"] = False
+            it.setdefault("via_descripcion", False)
             
             claves[k] = hoy
             it["encontrada"] = encontrada
@@ -1011,6 +1493,13 @@ def main(argv=None) -> int:
         f_x = sum(1 for it in res["listados"] if filtro.excluido(it["cargo"], it.get("empresa", "")))
         f_p = sum(1 for it in res["listados"] if not filtro.excluido(it["cargo"], it.get("empresa", "")) and not filtro.incluido(it["cargo"], it.get("tarjeta", "")))
         dups = len(res["listados"]) - len({i["id_local"] for i in res["listados"]})
+
+        huella = {
+            "ids": sorted(list({str(it["id_local"]) for it in res["listados"]})),
+            "titulos": sorted(list({it["cargo"] for it in res["listados"] if it.get("cargo")}))
+        }
+        if not huella["ids"] and estado_prev.get(nombre, {}).get("huella"):
+            huella = estado_prev[nombre]["huella"]
         
         estado_fuentes[nombre] = {
             "estado": res["estado"],
@@ -1027,6 +1516,7 @@ def main(argv=None) -> int:
             "error": res["error"],
             "avisos": res["ctx"]["avisos"][:10],
             "inicial": portal_inicial and res["estado"] == "ok",
+            "huella": huella,
         }
     # fuentes no corridas (--solo): conservar su último estado
     for n, e in estado_prev.items():
