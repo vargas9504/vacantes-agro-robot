@@ -392,3 +392,56 @@ def test_fuentes_orden_exacto():
         "riopaila", "manuelita"
     ]
     assert keys[idx_agrohunters:idx_agrohunters + len(esperado_orden)] == esperado_orden
+
+
+# ---------------------------------------------------------------------------
+# 6. Reporte de estado en estado.json: vacio vs error (listados = 0)
+# ---------------------------------------------------------------------------
+
+def test_correr_fuente_listados_cero_es_vacio(monkeypatch):
+    monkeypatch.setitem(b.FUENTES, "fedepalma", {"listar": lambda ctx: []})
+    cfg = {"url": "https://fedepalma.org/trabaje-con-nosotros/"}
+    res = b.correr_fuente("fedepalma", cfg, {}, None)
+    assert res["estado"] == "vacio"
+    assert res["error"] == ""
+    assert res["listados"] == []
+    assert len(res["ctx"]["avisos"]) >= 1
+    assert "https://fedepalma.org/trabaje-con-nosotros/" in res["ctx"]["avisos"][-1]
+
+
+def test_correr_fuente_jooble_vacio_reporta_terminos(monkeypatch):
+    monkeypatch.setenv("JOOBLE_API_KEY", "dummy_key")
+    class FakeHttp:
+        peticiones = 2
+        exitos = 2
+        ultimo_error = None
+        urls_consultadas = ["https://jooble.org/api/***"]
+        def post(self, url, json=None, **kw):
+            class Resp:
+                status_code = 200
+                def json(self):
+                    return {"jobs": []}
+            return Resp()
+
+    monkeypatch.setattr(b, "Http", lambda gen, nombre, snaps: FakeHttp())
+    cfg = {"rutas": ["/trabajo-ingeniero-agronomo", "/trabajo-administrador-agropecuario"]}
+    res = b.correr_fuente("jooble", cfg, {}, None)
+    assert res["estado"] == "vacio"
+    assert res["error"] == ""
+    assert res["listados"] == []
+    assert len(res["ctx"]["avisos"]) >= 1
+    assert "ingeniero agronomo" in res["ctx"]["avisos"][-1]
+    assert "administrador agropecuario" in res["ctx"]["avisos"][-1]
+
+
+def test_correr_fuente_error_red_o_ssl(monkeypatch):
+    import requests
+    def mock_listar(ctx):
+        raise requests.exceptions.SSLError("SSL: CERTIFICATE_VERIFY_FAILED")
+
+    monkeypatch.setitem(b.FUENTES, "fedepalma", {"listar": mock_listar})
+    cfg = {"url": "https://fedepalma.org/trabaje-con-nosotros/"}
+    res = b.correr_fuente("fedepalma", cfg, {}, None)
+    assert res["estado"] == "error"
+    assert "SSLError" in res["error"]
+    assert "CERTIFICATE_VERIFY_FAILED" in res["error"]
