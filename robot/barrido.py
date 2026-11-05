@@ -216,6 +216,9 @@ class Http:
         self.snapshots = snapshots
         self.n_snap = 0
         self.peticiones = 0
+        self.exitos = 0
+        self.urls_consultadas: list[str] = []
+        self.ultimo_error: Exception | None = None
 
     def _esperar(self, dominio: str, intervalo: float):
         espera = self.ultimo.get(dominio, 0) + intervalo - time.monotonic()
@@ -228,6 +231,9 @@ class Http:
               **kw) -> requests.Response:
         dominio = urlparse(url).netloc
         intervalo = self.intervalo if intervalo is None else intervalo
+        url_limpia = re.sub(r"/api/[a-zA-Z0-9_-]+", "/api/***", url)
+        if url_limpia not in self.urls_consultadas:
+            self.urls_consultadas.append(url_limpia)
         n429 = 0
         intento = 0
         while True:
@@ -235,7 +241,8 @@ class Http:
             self.peticiones += 1
             try:
                 r = self.s.request(metodo, url, timeout=self.timeout, **kw)
-            except requests.RequestException:
+            except requests.RequestException as e:
+                self.ultimo_error = e
                 intento += 1
                 if intento >= intentos:
                     raise
@@ -256,7 +263,12 @@ class Http:
                     continue
             if r.status_code in (401, 403, 247) or self._es_captcha(r):
                 raise Bloqueado(f"HTTP {r.status_code} / captcha en {dominio}")
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except requests.HTTPError as e:
+                self.ultimo_error = e
+                raise
+            self.exitos += 1
             return r
 
     def get(self, url, **kw):
@@ -978,14 +990,15 @@ def fuente_fao_un(ctx) -> list[dict]:
 def parse_fedepalma(html_txt: str, busqueda: str = "Fedepalma") -> list[dict]:
     sopa = BeautifulSoup(html_txt, "html.parser")
     out, vistos = [], set()
-    slides = sopa.select(".contSlideVacante, .vancante")
+    slides = sopa.select(".contSlideVacante, .vacante, .vancante, .vacantes, [class*='vacante'], [class*='convocatoria']")
     for s in slides:
         full = texto(s)
         h = s.find(["h2", "h3", "h4", "p", "div"])
         title = texto(h) if h else ""
         if not title or len(title) < 5 or title.lower().startswith("post") or title.lower().startswith("excelentes"):
             parts = [p.strip() for p in s.get_text(separator="\n", strip=True).splitlines() if p.strip()]
-            title = parts[0] if parts else ""
+            parts_validas = [p for p in parts if not p.lower().startswith("post") and not p.lower().startswith("excelentes")]
+            title = parts_validas[0] if parts_validas else (parts[0] if parts else "")
         if not title:
             continue
 
@@ -1228,19 +1241,19 @@ FUENTES = {
     "elempleo": {"listar": fuente_elempleo, "detalle": detalle_elempleo},
     "linkedin": {"listar": fuente_linkedin},
     "indeed": {"listar": fuente_indeed},
-    "jooble": {"listar": fuente_jooble, "permitir_vacio": True},
+    "jooble": {"listar": fuente_jooble},
     "kitempleo": {"listar": fuente_kitempleo, "detalle": detalle_kitempleo},
-    "agrohunters": {"listar": fuente_agrohunters, "permitir_vacio": True},
-    "adama": {"listar": fuente_adama, "permitir_vacio": True},
-    "magneto": {"listar": fuente_magneto, "permitir_vacio": True},
-    "elempleo_empresa": {"listar": fuente_elempleo_empresa, "permitir_vacio": True},
-    "fao_un": {"listar": fuente_fao_un, "permitir_vacio": True},
-    "fedepalma": {"listar": fuente_fedepalma, "permitir_vacio": True},
-    "agrosavia": {"listar": fuente_agrosavia, "permitir_vacio": True},
-    "syngenta": {"listar": fuente_syngenta, "permitir_vacio": True},
-    "yara": {"listar": fuente_yara, "permitir_vacio": True},
-    "riopaila": {"listar": fuente_riopaila, "permitir_vacio": True},
-    "manuelita": {"listar": fuente_manuelita, "permitir_vacio": True},
+    "agrohunters": {"listar": fuente_agrohunters},
+    "adama": {"listar": fuente_adama},
+    "magneto": {"listar": fuente_magneto},
+    "elempleo_empresa": {"listar": fuente_elempleo_empresa},
+    "fao_un": {"listar": fuente_fao_un},
+    "fedepalma": {"listar": fuente_fedepalma},
+    "agrosavia": {"listar": fuente_agrosavia},
+    "syngenta": {"listar": fuente_syngenta},
+    "yara": {"listar": fuente_yara},
+    "riopaila": {"listar": fuente_riopaila},
+    "manuelita": {"listar": fuente_manuelita},
 }
 
 
@@ -1352,15 +1365,64 @@ def seleccionar(portal: str, listados: list[dict], filtro: Filtro, vistos: dict,
     return candidatas, n_filtro
 
 
+def _consulta_fuente(nombre: str, cfg: dict, ctx: dict) -> str:
+    """Devuelve un texto descriptivo de la URL o términos consultados para avisos."""
+    if cfg.get("url"):
+        return f"URL: {cfg['url']}"
+    if cfg.get("rutas"):
+        if nombre == "jooble":
+            terms = [r.replace("/trabajo-", "").replace("-", " ").strip() for r in cfg["rutas"]]
+            return f"términos: {', '.join(terms)} (rutas: {', '.join(cfg['rutas'])})"
+        return f"rutas: {', '.join(cfg['rutas'])}"
+    if cfg.get("terminos"):
+        terminos = cfg["terminos"]
+        txt = ", ".join(terminos[:5])
+        if len(terminos) > 5:
+            txt += f" (+{len(terminos) - 5} más)"
+        return f"términos: {txt}"
+    if cfg.get("terminos_colombia"):
+        terminos = cfg["terminos_colombia"]
+        txt = ", ".join(terminos[:5])
+        if len(terminos) > 5:
+            txt += f" (+{len(terminos) - 5} más)"
+        return f"términos: {txt}"
+    if cfg.get("slugs"):
+        slugs = cfg["slugs"]
+        txt = ", ".join(slugs[:5])
+        if len(slugs) > 5:
+            txt += f" (+{len(slugs) - 5} más)"
+        return f"slugs: {txt}"
+    if cfg.get("slugs_7dias"):
+        slugs = cfg["slugs_7dias"]
+        txt = ", ".join(slugs[:5])
+        if len(slugs) > 5:
+            txt += f" (+{len(slugs) - 5} más)"
+        return f"slugs: {txt}"
+    if cfg.get("portales"):
+        return f"portales: {', '.join(cfg['portales'].values())}"
+    if cfg.get("subdominios"):
+        return f"subdominios: {', '.join(cfg['subdominios'])}"
+    http = ctx.get("http")
+    if http and getattr(http, "urls_consultadas", None):
+        return f"URL: {', '.join(http.urls_consultadas[:3])}"
+    return "consulta configurada"
+
+
 def correr_fuente(nombre: str, cfg: dict, gen: dict, snapshots: Path | None) -> dict:
     ctx = {"nombre": nombre, "cfg": cfg, "http": Http(gen, nombre, snapshots), "avisos": []}
     t0 = time.monotonic()
     res = {"nombre": nombre, "ctx": ctx, "listados": [], "estado": "ok", "error": ""}
     try:
         res["listados"] = FUENTES[nombre]["listar"](ctx)
-        if not res["listados"] and not FUENTES[nombre].get("permitir_vacio", False):
-            res["estado"] = "vacio"
-            res["error"] = "0 listados leídos (¿cambió el HTML?)"
+        if not res["listados"]:
+            http = ctx.get("http")
+            if http and http.peticiones > 0 and http.exitos == 0 and http.ultimo_error:
+                res["estado"], res["error"] = "error", f"{type(http.ultimo_error).__name__}: {http.ultimo_error}"
+            else:
+                res["estado"] = "vacio"
+                res["error"] = ""
+                consulta = _consulta_fuente(nombre, cfg, ctx)
+                _aviso(ctx, f"0 listados leídos ({consulta})")
     except Bloqueado as e:
         res["estado"], res["error"] = "bloqueado", str(e)
     except Exception as e:  # noqa: BLE001 — una fuente nunca tumba a las demás
